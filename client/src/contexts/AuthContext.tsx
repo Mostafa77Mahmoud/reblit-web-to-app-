@@ -1,21 +1,30 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import * as api from '@/services/api';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { Skeleton } from '@/components/ui/skeleton';
 
 export interface User {
   id: string;
   email: string;
+  username?: string;
   role: 'regular_user' | 'shariah_expert';
+}
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+export interface SignupCredentials {
+  email: string;
+  password: string;
+  username?: string;
 }
 
 interface AuthContextType {
   isAuthenticated: boolean;
   user: User | null;
-  login: (credentials: api.LoginCredentials) => Promise<void>;
-  signup: (credentials: api.SignupCredentials) => Promise<void>;
+  login: (credentials: LoginCredentials) => Promise<void>;
+  signup: (credentials: SignupCredentials) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
   isGuestMode: boolean;
@@ -25,91 +34,114 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(false); // Changed to false for guest mode
-  const [isGuestMode, setIsGuestMode] = useState(true); // Start in guest mode
-  const navigate = useNavigate();
   const { toast } = useToast();
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isGuestMode, setIsGuestMode] = useState(false);
 
-  const handleAuthSuccess = useCallback((authResponse: api.AuthResponse) => {
-    localStorage.setItem('authToken', authResponse.token);
-    setUser(authResponse.user);
-    setIsGuestMode(false);
-    navigate('/');
-  }, [navigate]);
-
-  const verifyToken = useCallback(async () => {
-    const token = localStorage.getItem('authToken');
-    if (token) {
-      try {
-        const profile = await api.getUserProfile();
-        setUser(profile.user);
-        setIsGuestMode(false);
-      } catch (error) {
-        console.error("Session expired or token invalid", error);
-        localStorage.removeItem('authToken');
-        setUser(null);
-        setIsGuestMode(true);
-      }
+  useEffect(() => {
+    // Check for existing session
+    const storedUser = localStorage.getItem('user');
+    const token = localStorage.getItem('auth_token');
+    
+    if (storedUser && token) {
+      setUser(JSON.parse(storedUser));
     }
     setIsLoading(false);
   }, []);
 
-  useEffect(() => {
-    verifyToken();
-  }, [verifyToken]);
-
-  const login = async (credentials: api.LoginCredentials) => {
+  const login = async (credentials: LoginCredentials) => {
+    setIsLoading(true);
     try {
-      const response = await api.loginUser(credentials);
-      handleAuthSuccess(response);
-      toast({ title: 'Login Successful', description: 'Welcome back!' });
-    } catch (error: any) {
-      toast({ variant: 'destructive', title: 'Login Failed', description: error.message });
+      const { authApi } = await import('@/lib/api');
+      const response = await authApi.login(credentials);
+      
+      setUser(response.user);
+      localStorage.setItem('user', JSON.stringify(response.user));
+      
+      if (response.token) {
+        localStorage.setItem('auth_token', response.token);
+      }
+      
+      setIsGuestMode(false);
+      
+      toast({
+        title: "Login Successful",
+        description: "Welcome back to Shariaa Analyzer"
+      });
+    } catch (error) {
+      console.error('Login failed:', error);
+      toast({
+        variant: "destructive",
+        title: "Login Failed",
+        description: error instanceof Error ? error.message : "Please check your credentials"
+      });
       throw error;
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const signup = async (credentials: api.SignupCredentials) => {
+  const signup = async (credentials: SignupCredentials) => {
+    setIsLoading(true);
     try {
-      const response = await api.signupUser(credentials);
-      handleAuthSuccess(response);
-      toast({ title: 'Signup Successful', description: 'Welcome!' });
-    } catch (error: any) {
-      toast({ variant: 'destructive', title: 'Signup Failed', description: error.message });
+      const { authApi } = await import('@/lib/api');
+      const response = await authApi.signup(credentials);
+      
+      setUser(response.user);
+      localStorage.setItem('user', JSON.stringify(response.user));
+      
+      if (response.token) {
+        localStorage.setItem('auth_token', response.token);
+      }
+      
+      setIsGuestMode(false);
+      
+      toast({
+        title: "Account Created",
+        description: "Welcome to Shariaa Analyzer"
+      });
+    } catch (error) {
+      console.error('Signup failed:', error);
+      toast({
+        variant: "destructive",
+        title: "Signup Failed",
+        description: error instanceof Error ? error.message : "Please try again"
+      });
       throw error;
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const continueAsGuest = useCallback(() => {
+  const logout = async () => {
+    try {
+      const { authApi } = await import('@/lib/api');
+      await authApi.logout();
+    } catch (error) {
+      console.error('Logout API call failed:', error);
+    } finally {
+      setUser(null);
+      setIsGuestMode(false);
+      localStorage.removeItem('user');
+      localStorage.removeItem('auth_token');
+      
+      toast({
+        title: "Logged Out",
+        description: "Come back soon!"
+      });
+    }
+  };
+
+  const continueAsGuest = () => {
     setIsGuestMode(true);
     setUser(null);
-    localStorage.removeItem('authToken');
-    navigate('/');
-    toast({ title: 'Guest Mode', description: 'You can use all features as a guest!' });
-  }, [navigate, toast]);
-
-  const logout = useCallback(() => {
-    setUser(null);
-    localStorage.removeItem('authToken');
-    setIsGuestMode(true);
-    navigate('/');
-    toast({ title: 'Logged Out', description: 'You have been successfully logged out.' });
-  }, [navigate, toast]);
-
-  if (isLoading) {
-    return (
-      <div className="w-screen h-screen flex items-center justify-center">
-        <div className="flex flex-col items-center space-y-4">
-            <Skeleton className="h-12 w-12 rounded-full" />
-            <div className="space-y-2">
-                <Skeleton className="h-4 w-[250px]" />
-                <Skeleton className="h-4 w-[200px]" />
-            </div>
-        </div>
-      </div>
-    );
-  }
+    
+    toast({
+      title: "Guest Mode",
+      description: "You can explore limited features"
+    });
+  };
 
   return (
     <AuthContext.Provider value={{ 

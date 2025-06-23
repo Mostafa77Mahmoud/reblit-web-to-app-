@@ -71,29 +71,55 @@ const CameraScreen: React.FC<CameraScreenProps> = ({ onNavigate, onBack }) => {
     
     setIsAnalyzing(true);
     
-    // Simulate AI analysis with realistic delay
-    await new Promise(resolve => setTimeout(resolve, 3000 + Math.random() * 2000));
-    
-    // Mock analysis result
-    const mockResult: AnalysisResult = {
-      complianceScore: Math.floor(Math.random() * 30) + 70, // 70-100
-      status: Math.random() > 0.7 ? 'warning' : 'compliant',
-      keyFindings: [
-        "Document follows Islamic financial principles",
-        "No interest-based transactions detected",
-        "Profit-sharing mechanism identified",
-        "Compliance with Shariaa guidelines"
-      ],
-      recommendations: [
-        "Consider adding explicit Shariaa compliance clause",
-        "Ensure profit-loss sharing ratios are clearly defined",
-        "Add dispute resolution mechanism"
-      ],
-      processingTime: 2.3
-    };
-    
-    setAnalysisResult(mockResult);
-    setIsAnalyzing(false);
+    try {
+      // Convert captured image to File object
+      const response = await fetch(capturedImage.src);
+      const blob = await response.blob();
+      const file = new File([blob], 'scanned-document.jpg', { type: 'image/jpeg' });
+      
+      // Call real API
+      const { analysisApi } = await import('@/lib/api');
+      const result = await analysisApi.analyzeContract(file);
+      
+      // Transform API result to component format
+      const analysisResult: AnalysisResult = {
+        complianceScore: Math.round(result.compliance_stats.compliance_percentage),
+        status: result.compliance_stats.compliance_percentage >= 80 ? 'compliant' : 
+                result.compliance_stats.compliance_percentage >= 60 ? 'warning' : 'non-compliant',
+        keyFindings: result.terms
+          .filter(term => term.is_valid_sharia)
+          .slice(0, 4)
+          .map(term => term.term_text.substring(0, 50) + '...'),
+        recommendations: result.terms
+          .filter(term => !term.is_valid_sharia && term.modified_term)
+          .slice(0, 3)
+          .map(term => term.modified_term || 'Review term for compliance'),
+        processingTime: 2.3
+      };
+      
+      setAnalysisResult(analysisResult);
+      
+      // Navigate to results with session data
+      setTimeout(() => {
+        onNavigate('results');
+      }, 2000);
+      
+    } catch (error) {
+      console.error('Analysis failed:', error);
+      
+      // Show error state
+      const errorResult: AnalysisResult = {
+        complianceScore: 0,
+        status: 'non-compliant',
+        keyFindings: ['Analysis failed', 'Please try again'],
+        recommendations: ['Check internet connection', 'Ensure document is clearly visible'],
+        processingTime: 0
+      };
+      
+      setAnalysisResult(errorResult);
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   const getStatusColor = (status: string) => {

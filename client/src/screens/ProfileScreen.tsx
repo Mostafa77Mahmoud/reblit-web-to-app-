@@ -183,7 +183,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ onBack, onNavigate }) => 
                   <Avatar className="w-20 h-20 shadow-lg">
                     <AvatarImage src="/api/placeholder/80/80" />
                     <AvatarFallback className="text-xl font-bold bg-gradient-to-r from-primary to-primary/80 text-primary-foreground">
-                      {isGuestMode ? 'G' : user?.username?.charAt(0).toUpperCase() || 'U'}
+                      {isGuestMode ? 'G' : (user?.username?.charAt(0) || user?.email?.charAt(0) || 'U').toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   {isEditing && (
@@ -200,10 +200,10 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ onBack, onNavigate }) => 
                 
                 <div className="flex-1">
                   <h2 className="text-2xl font-bold mb-1">
-                    {isGuestMode ? 'Guest User' : user?.username || 'User Name'}
+                    {isGuestMode ? 'Guest User' : user?.username || user?.email || 'User Name'}
                   </h2>
                   <p className="text-muted-foreground mb-2">
-                    {isGuestMode ? 'Temporary Account' : 'user@example.com'}
+                    {isGuestMode ? 'Temporary Account' : user?.email || 'user@example.com'}
                   </p>
                   
                   <div className="flex items-center space-x-2">

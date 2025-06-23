@@ -2,7 +2,8 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "@/lib/api";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { EnhancedThemeProvider } from "./contexts/EnhancedThemeContext";
 import { SessionProvider } from "./contexts/SessionContext";
@@ -14,20 +15,7 @@ import SignupPage from "./pages/SignupPage";
 import { motion, AnimatePresence } from "framer-motion";
 import "./App.css";
 
-// Enhanced React Query configuration
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      retry: 2,
-      staleTime: 10 * 60 * 1000, // 10 minutes
-      gcTime: 15 * 60 * 1000, // 15 minutes (renamed from cacheTime)
-    },
-    mutations: {
-      retry: 1,
-    },
-  },
-});
+
 
 /**
  * Enhanced App Component

@@ -32,12 +32,12 @@ interface QuickStat {
 }
 
 interface RecentAnalysis {
-  id: string;
-  title: string;
-  date: string;
-  status: 'compliant' | 'warning' | 'non-compliant';
-  score: number;
-  type: string;
+  session_id: string;
+  original_filename: string;
+  analysis_timestamp: string;
+  compliance_percentage: number;
+  total_terms: number;
+  compliant_count: number;
 }
 
 interface HomeScreenProps {
@@ -48,81 +48,90 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
   const { t, dir } = useLanguage();
   const { user, isGuestMode } = useAuth();
   const [timeOfDay, setTimeOfDay] = useState('');
+  const [userStats, setUserStats] = useState<any>(null);
+  const [recentAnalyses, setRecentAnalyses] = useState<RecentAnalysis[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const hour = new Date().getHours();
     if (hour < 12) setTimeOfDay('Morning');
     else if (hour < 17) setTimeOfDay('Afternoon');
     else setTimeOfDay('Evening');
-  }, []);
+
+    loadDashboardData();
+  }, [user]);
+
+  const loadDashboardData = async () => {
+    if (isGuestMode) {
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const { statsApi, analysisApi } = await import('@/lib/api');
+      
+      // Load user stats and recent analyses in parallel
+      const [stats, history] = await Promise.all([
+        statsApi.getUserStats().catch(() => null),
+        analysisApi.getHistory().catch(() => [])
+      ]);
+
+      setUserStats(stats);
+      setRecentAnalyses(history.slice(0, 3)); // Show only recent 3
+    } catch (error) {
+      console.error('Failed to load dashboard data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const quickStats: QuickStat[] = [
     {
       label: 'Total Analyses',
-      value: '24',
+      value: userStats?.total_analyses?.toString() || '0',
       icon: <FileText className="w-5 h-5" />,
       trend: 12,
       color: 'from-blue-500 to-cyan-500'
     },
     {
       label: 'Compliance Rate',
-      value: '87%',
+      value: userStats?.compliance_rate ? `${Math.round(userStats.compliance_rate)}%` : '0%',
       icon: <Shield className="w-5 h-5" />,
       trend: 5,
       color: 'from-green-500 to-emerald-500'
     },
     {
       label: 'This Month',
-      value: '8',
+      value: userStats?.analyses_this_month?.toString() || '0',
       icon: <TrendingUp className="w-5 h-5" />,
       trend: 23,
       color: 'from-purple-500 to-pink-500'
     }
   ];
 
-  const recentAnalyses: RecentAnalysis[] = [
-    {
-      id: '1',
-      title: 'Investment Contract - ABC Bank',
-      date: '2 hours ago',
-      status: 'compliant',
-      score: 94,
-      type: 'Investment'
-    },
-    {
-      id: '2',
-      title: 'Loan Agreement - XYZ Finance',
-      date: '1 day ago',
-      status: 'warning',
-      score: 76,
-      type: 'Loan'
-    },
-    {
-      id: '3',
-      title: 'Partnership Agreement',
-      date: '3 days ago',
-      status: 'compliant',
-      score: 89,
-      type: 'Partnership'
-    }
-  ];
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'compliant': return 'text-green-500 bg-green-500/10';
-      case 'warning': return 'text-yellow-500 bg-yellow-500/10';
-      case 'non-compliant': return 'text-red-500 bg-red-500/10';
-      default: return 'text-gray-500 bg-gray-500/10';
-    }
+  const getStatusColor = (compliancePercentage: number) => {
+    if (compliancePercentage >= 80) return 'text-green-500 bg-green-500/10';
+    if (compliancePercentage >= 60) return 'text-yellow-500 bg-yellow-500/10';
+    return 'text-red-500 bg-red-500/10';
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'compliant': return <CheckCircle className="w-4 h-4" />;
-      case 'warning': return <AlertTriangle className="w-4 h-4" />;
-      case 'non-compliant': return <AlertTriangle className="w-4 h-4" />;
-      default: return <Clock className="w-4 h-4" />;
-    }
+  const getStatusIcon = (compliancePercentage: number) => {
+    if (compliancePercentage >= 80) return <CheckCircle className="w-4 h-4" />;
+    if (compliancePercentage >= 60) return <AlertTriangle className="w-4 h-4" />;
+    return <AlertTriangle className="w-4 h-4" />;
+  };
+
+  const formatDate = (timestamp: string) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffHours < 1) return 'Just now';
+    if (diffHours < 24) return `${diffHours} hours ago`;
+    if (diffDays === 1) return '1 day ago';
+    return `${diffDays} days ago`;
   };
 
   return (
@@ -144,7 +153,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
             >
-              {isGuestMode ? 'Guest User' : user?.username || 'User'}
+              {isGuestMode ? 'Guest User' : user?.username || user?.email?.split('@')[0] || 'User'}
             </motion.p>
           </div>
           
@@ -289,53 +298,81 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
         >
-          {recentAnalyses.map((analysis, index) => (
-            <motion.div
-              key={analysis.id}
-              className="p-4 bg-card rounded-xl shadow-lg border border-border/50"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.7 + index * 0.1 }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex-1">
-                  <h3 className="font-semibold text-sm mb-1">{analysis.title}</h3>
-                  <p className="text-xs text-muted-foreground">{analysis.date}</p>
+          {isLoading ? (
+            // Loading skeleton
+            [...Array(3)].map((_, index) => (
+              <div key={index} className="p-4 bg-card rounded-xl shadow-lg border border-border/50 animate-pulse">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex-1">
+                    <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
+                    <div className="h-3 bg-muted rounded w-1/2"></div>
+                  </div>
+                  <div className="h-6 bg-muted rounded w-16"></div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <Badge variant="secondary" className="text-xs">
-                    {analysis.type}
-                  </Badge>
-                  <div className={`p-1 rounded-full ${getStatusColor(analysis.status)}`}>
-                    {getStatusIcon(analysis.status)}
+                <div className="h-4 bg-muted rounded w-1/4"></div>
+              </div>
+            ))
+          ) : recentAnalyses.length > 0 ? (
+            recentAnalyses.map((analysis, index) => (
+              <motion.div
+                key={analysis.session_id}
+                className="p-4 bg-card rounded-xl shadow-lg border border-border/50"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.7 + index * 0.1 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-sm mb-1">{analysis.original_filename}</h3>
+                    <p className="text-xs text-muted-foreground">{formatDate(analysis.analysis_timestamp)}</p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Badge variant="secondary" className="text-xs">
+                      {analysis.total_terms} terms
+                    </Badge>
+                    <div className={`p-1 rounded-full ${getStatusColor(analysis.compliance_percentage)}`}>
+                      {getStatusIcon(analysis.compliance_percentage)}
+                    </div>
                   </div>
                 </div>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <div className="flex items-center">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`w-3 h-3 ${
-                          i < Math.floor(analysis.score / 20)
-                            ? 'text-yellow-400 fill-current'
-                            : 'text-gray-300'
-                        }`}
-                      />
-                    ))}
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <div className="flex items-center">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`w-3 h-3 ${
+                            i < Math.floor(analysis.compliance_percentage / 20)
+                              ? 'text-yellow-400 fill-current'
+                              : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-xs font-medium">{Math.round(analysis.compliance_percentage)}%</span>
                   </div>
-                  <span className="text-xs font-medium">{analysis.score}%</span>
+                  <Button size="sm" variant="ghost" className="h-6 px-2 text-xs">
+                    View Details
+                  </Button>
                 </div>
-                <Button size="sm" variant="ghost" className="h-6 px-2 text-xs">
-                  View Details
-                </Button>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            ))
+          ) : (
+            <div className="text-center py-8">
+              <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+              <h3 className="font-semibold text-lg mb-2">No Analyses Yet</h3>
+              <p className="text-muted-foreground text-sm mb-4">
+                Start by scanning or uploading your first contract
+              </p>
+              <Button onClick={() => onNavigate('camera')} className="bg-gradient-to-r from-emerald-500 to-teal-500">
+                <Camera className="w-4 h-4 mr-2" />
+                Scan Document
+              </Button>
+            </div>
+          )}
         </motion.div>
       </div>
 

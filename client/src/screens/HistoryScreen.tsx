@@ -25,17 +25,14 @@ import {
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface HistoryItem {
-  id: string;
-  title: string;
-  type: 'Investment' | 'Loan' | 'Partnership' | 'Insurance' | 'Trade';
-  date: string;
-  time: string;
-  status: 'compliant' | 'warning' | 'non-compliant';
-  score: number;
-  amount?: string;
-  institution: string;
-  tags: string[];
-  thumbnail?: string;
+  session_id: string;
+  original_filename: string;
+  analysis_timestamp: string;
+  compliance_percentage: number;
+  total_terms: number;
+  compliant_count: number;
+  non_compliant_count: number;
+  detected_language: 'ar' | 'en';
 }
 
 interface HistoryScreenProps {
@@ -48,71 +45,34 @@ const HistoryScreen: React.FC<HistoryScreenProps> = ({ onBack, onNavigate }) => 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'compliant' | 'warning' | 'non-compliant'>('all');
   const [sortBy, setSortBy] = useState<'date' | 'score' | 'name'>('date');
+  const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const historyItems: HistoryItem[] = [
-    {
-      id: '1',
-      title: 'Murabaha Investment Contract',
-      type: 'Investment',
-      date: '2024-12-20',
-      time: '14:30',
-      status: 'compliant',
-      score: 94,
-      amount: '$250,000',
-      institution: 'Islamic Development Bank',
-      tags: ['Murabaha', 'Real Estate', 'Halal']
-    },
-    {
-      id: '2',
-      title: 'Partnership Agreement - Tech Startup',
-      type: 'Partnership',
-      date: '2024-12-19',
-      time: '09:15',
-      status: 'warning',
-      score: 76,
-      amount: '$100,000',
-      institution: 'Al-Baraka Ventures',
-      tags: ['Musharakah', 'Technology', 'Review Required']
-    },
-    {
-      id: '3',
-      title: 'Trade Finance Agreement',
-      type: 'Trade',
-      date: '2024-12-18',
-      time: '16:45',
-      status: 'compliant',
-      score: 89,
-      amount: '$500,000',
-      institution: 'Dubai Islamic Bank',
-      tags: ['Murabaha', 'Export', 'Commodities']
-    },
-    {
-      id: '4',
-      title: 'Insurance Policy - Takaful',
-      type: 'Insurance',
-      date: '2024-12-17',
-      time: '11:20',
-      status: 'compliant',
-      score: 92,
-      amount: '$50,000',
-      institution: 'Takaful Insurance Co.',
-      tags: ['Takaful', 'Life Insurance', 'Halal']
-    },
-    {
-      id: '5',
-      title: 'Conventional Loan Agreement',
-      type: 'Loan',
-      date: '2024-12-16',
-      time: '13:10',
-      status: 'non-compliant',
-      score: 23,
-      amount: '$75,000',
-      institution: 'Standard Bank',
-      tags: ['Interest-based', 'Haram', 'Non-compliant']
+  useEffect(() => {
+    loadHistory();
+  }, []);
+
+  const loadHistory = async () => {
+    try {
+      const { analysisApi } = await import('@/lib/api');
+      const history = await analysisApi.getHistory();
+      setHistoryItems(history);
+    } catch (error) {
+      console.error('Failed to load history:', error);
+      setHistoryItems([]);
+    } finally {
+      setIsLoading(false);
     }
-  ];
+  };
 
-  const getStatusColor = (status: string) => {
+  const getStatusFromScore = (score: number): 'compliant' | 'warning' | 'non-compliant' => {
+    if (score >= 80) return 'compliant';
+    if (score >= 60) return 'warning';
+    return 'non-compliant';
+  };
+
+  const getStatusColor = (score: number) => {
+    const status = getStatusFromScore(score);
     switch (status) {
       case 'compliant': return 'text-green-600 bg-green-50 border-green-200';
       case 'warning': return 'text-yellow-600 bg-yellow-50 border-yellow-200';
@@ -121,7 +81,8 @@ const HistoryScreen: React.FC<HistoryScreenProps> = ({ onBack, onNavigate }) => 
     }
   };
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (score: number) => {
+    const status = getStatusFromScore(score);
     switch (status) {
       case 'compliant': return <CheckCircle className="w-4 h-4" />;
       case 'warning': return <AlertTriangle className="w-4 h-4" />;
@@ -130,39 +91,37 @@ const HistoryScreen: React.FC<HistoryScreenProps> = ({ onBack, onNavigate }) => 
     }
   };
 
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'Investment': return <TrendingUp className="w-4 h-4" />;
-      case 'Loan': return <DollarSign className="w-4 h-4" />;
-      case 'Partnership': return <Building2 className="w-4 h-4" />;
-      default: return <FileText className="w-4 h-4" />;
-    }
+  const formatDate = (timestamp: string) => {
+    return new Date(timestamp).toLocaleDateString();
+  };
+
+  const formatTime = (timestamp: string) => {
+    return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
   const filteredItems = historyItems
-    .filter(item => 
-      (selectedFilter === 'all' || item.status === selectedFilter) &&
-      (searchQuery === '' || 
-       item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-       item.institution.toLowerCase().includes(searchQuery.toLowerCase()) ||
-       item.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
-      )
-    )
+    .filter(item => {
+      const status = getStatusFromScore(item.compliance_percentage);
+      return (selectedFilter === 'all' || status === selectedFilter) &&
+        (searchQuery === '' || 
+         item.original_filename.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    })
     .sort((a, b) => {
       switch (sortBy) {
-        case 'score': return b.score - a.score;
-        case 'name': return a.title.localeCompare(b.title);
+        case 'score': return b.compliance_percentage - a.compliance_percentage;
+        case 'name': return a.original_filename.localeCompare(b.original_filename);
         case 'date':
-        default: return new Date(b.date + ' ' + b.time).getTime() - new Date(a.date + ' ' + a.time).getTime();
+        default: return new Date(b.analysis_timestamp).getTime() - new Date(a.analysis_timestamp).getTime();
       }
     });
 
   const stats = {
     total: historyItems.length,
-    compliant: historyItems.filter(item => item.status === 'compliant').length,
-    warning: historyItems.filter(item => item.status === 'warning').length,
-    nonCompliant: historyItems.filter(item => item.status === 'non-compliant').length,
-    avgScore: Math.round(historyItems.reduce((sum, item) => sum + item.score, 0) / historyItems.length)
+    compliant: historyItems.filter(item => getStatusFromScore(item.compliance_percentage) === 'compliant').length,
+    warning: historyItems.filter(item => getStatusFromScore(item.compliance_percentage) === 'warning').length,
+    nonCompliant: historyItems.filter(item => getStatusFromScore(item.compliance_percentage) === 'non-compliant').length,
+    avgScore: historyItems.length > 0 ? Math.round(historyItems.reduce((sum, item) => sum + item.compliance_percentage, 0) / historyItems.length) : 0
   };
 
   return (

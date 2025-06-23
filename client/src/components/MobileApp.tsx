@@ -9,6 +9,7 @@ import HomeScreen from '@/screens/HomeScreen';
 import CameraScreen from '@/screens/CameraScreen';
 import HistoryScreen from '@/screens/HistoryScreen';
 import ProfileScreen from '@/screens/ProfileScreen';
+import ResultsScreen from '@/screens/ResultsScreen';
 import MobileNavigation from '@/components/MobileNavigation';
 
 // Screen types
@@ -195,20 +196,7 @@ const MobileApp: React.FC<MobileAppProps> = () => {
         );
       
       case 'results':
-        return (
-          <div className="min-h-screen bg-background flex items-center justify-center">
-            <div className="text-center">
-              <h2 className="text-2xl font-bold mb-4">Analysis Results</h2>
-              <p className="text-muted-foreground">Detailed results view coming soon</p>
-              <button 
-                onClick={handleBack}
-                className="mt-4 px-6 py-2 bg-primary text-primary-foreground rounded-lg"
-              >
-                Back to Home
-              </button>
-            </div>
-          </div>
-        );
+        return <ResultsScreen onBack={handleBack} onNavigate={handleNavigate} />;
       
       default:
         return <HomeScreen onNavigate={handleNavigate} />;
