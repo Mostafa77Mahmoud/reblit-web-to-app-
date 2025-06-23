@@ -1,0 +1,90 @@
+
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { EnhancedThemeProvider } from "./contexts/EnhancedThemeContext";
+import { SessionProvider } from "./contexts/SessionContext";
+import { AuthProvider } from "./contexts/AuthContext";
+import Index from "./pages/Index";
+import HomePage from "./pages/HomePage";
+import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
+import NotFound from "./pages/NotFound";
+import { motion, AnimatePresence } from "framer-motion";
+import "./App.css";
+
+// Enhanced React Query configuration
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 2,
+      staleTime: 10 * 60 * 1000, // 10 minutes
+      gcTime: 15 * 60 * 1000, // 15 minutes (renamed from cacheTime)
+    },
+    mutations: {
+      retry: 1,
+    },
+  },
+});
+
+/**
+ * Enhanced App Component
+ * 
+ * Root application component with comprehensive enhancements:
+ * - Enhanced React Query for optimized data fetching
+ * - Enhanced theme provider with smooth transitions
+ * - Enhanced auth provider with improved user experience
+ * - Enhanced session provider for better state management
+ * - Enhanced toasts with better positioning and styling
+ * - Enhanced routing with smooth page transitions
+ * - Enhanced animations and micro-interactions
+ * - Enhanced accessibility and keyboard navigation
+ * - Enhanced performance optimizations
+ */
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <EnhancedThemeProvider>
+      <BrowserRouter>
+        <AuthProvider>
+          <SessionProvider>
+            <TooltipProvider delayDuration={300}>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.4 }}
+                className="h-full"
+              >
+                {/* Enhanced toast notifications */}
+                <Toaster />
+                <Sonner 
+                  position="top-right"
+                  expand={true}
+                  richColors={true}
+                  closeButton={true}
+                />
+                
+                {/* Enhanced application routing with page transitions */}
+                <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5">
+                  <AnimatePresence mode="wait">
+                    <Routes>
+                      <Route path="/" element={<Index />} />
+                      <Route path="/home" element={<HomePage />} />
+                      <Route path="/login" element={<LoginPage />} />
+                      <Route path="/signup" element={<SignupPage />} />
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </AnimatePresence>
+                </div>
+              </motion.div>
+            </TooltipProvider>
+          </SessionProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </EnhancedThemeProvider>
+  </QueryClientProvider>
+);
+
+export default App;

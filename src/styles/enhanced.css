@@ -1,0 +1,162 @@
+
+/* Enhanced theme transitions */
+.theme-transitioning * {
+  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Enhanced glass morphism effects */
+.glass-enhanced {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.dark .glass-enhanced {
+  background: rgba(15, 15, 15, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* Enhanced scrollbar */
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  @apply bg-border/50 rounded-full hover:bg-border/70;
+  transition: background-color 0.2s ease;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  @apply bg-border/80;
+}
+
+/* Enhanced hover effects */
+.hover-glow {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-glow:hover {
+  box-shadow: 0 10px 25px -5px rgba(var(--primary-rgb), 0.2),
+              0 0 0 1px rgba(var(--primary-rgb), 0.1);
+  transform: translateY(-2px);
+}
+
+/* Enhanced button styles */
+.btn-enhanced {
+  @apply relative overflow-hidden transition-all duration-300 ease-out;
+}
+
+.btn-enhanced::before {
+  content: '';
+  @apply absolute inset-0 bg-gradient-to-r from-primary/20 to-accent/20 opacity-0 transition-opacity duration-300;
+}
+
+.btn-enhanced:hover::before {
+  @apply opacity-100;
+}
+
+.btn-enhanced:active {
+  @apply scale-95;
+}
+
+/* Enhanced card styles */
+.card-enhanced {
+  @apply bg-background/80 backdrop-blur-sm border border-border/50 rounded-xl shadow-sm;
+  @apply hover:shadow-lg hover:border-border/70 transition-all duration-300 ease-out;
+}
+
+.card-enhanced::before {
+  content: '';
+  @apply absolute inset-0 rounded-xl bg-gradient-to-br from-primary/5 to-accent/5 opacity-0 transition-opacity duration-300 pointer-events-none;
+}
+
+.card-enhanced:hover::before {
+  @apply opacity-100;
+}
+
+/* Enhanced text effects */
+.text-glow {
+  text-shadow: 0 0 20px rgba(var(--primary-rgb), 0.3);
+}
+
+.gradient-text {
+  @apply bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent;
+}
+
+/* Enhanced loading states */
+.loading-enhanced {
+  @apply relative overflow-hidden;
+}
+
+.loading-enhanced::after {
+  content: '';
+  @apply absolute inset-0 bg-gradient-to-r from-transparent via-primary/20 to-transparent;
+  animation: shimmer 2s infinite;
+  transform: translateX(-100%);
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Enhanced focus styles */
+.focus-enhanced:focus-visible {
+  @apply outline-none ring-2 ring-primary/50 ring-offset-2 ring-offset-background;
+  box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.5),
+              0 0 20px rgba(var(--primary-rgb), 0.2);
+}
+
+/* Responsive animations */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Enhanced pulse animation */
+.pulse-enhanced {
+  animation: pulse-enhanced 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse-enhanced {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+/* Enhanced floating animation */
+.float-enhanced {
+  animation: float-enhanced 6s ease-in-out infinite;
+}
+
+@keyframes float-enhanced {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}

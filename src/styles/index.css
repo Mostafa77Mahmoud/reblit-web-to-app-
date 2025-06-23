@@ -1,0 +1,143 @@
+
+/* src/styles/index.css */
+
+@import './base.css';
+@import './components.css';
+@import './animations.css';
+@import './layout.css';
+@import './dark-mode.css';
+@import './question-animations.css';
+@import './enhanced.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Enhanced CSS custom properties for dynamic theming */
+:root {
+  --primary-rgb: 34, 197, 94;
+  --accent-rgb: 249, 115, 22;
+  --background-rgb: 255, 255, 255;
+  --foreground-rgb: 15, 23, 42;
+}
+
+.dark {
+  --primary-rgb: 34, 197, 94;
+  --accent-rgb: 249, 115, 22;
+  --background-rgb: 2, 8, 23;
+  --foreground-rgb: 248, 250, 252;
+}
+
+.ltr-in-rtl {
+  direction: ltr;
+  unicode-bidi: embed;
+  display: inline-block;
+}
+
+.rtl-aware-root {
+  width: 100%;
+  min-height: 100vh;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Enhanced base styles */
+#root > div,
+#root > div > div {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.app-container {
+  @apply relative min-h-screen w-full flex flex-col flex-1;
+}
+
+/* Enhanced global styles */
+* {
+  @apply transition-colors duration-200;
+}
+
+body {
+  @apply bg-background text-foreground overflow-x-hidden;
+  min-height: 100vh;
+  font-feature-settings: "rlig" 1, "calt" 1;
+}
+
+/* Enhanced card effects */
+.focused-card {
+  @apply transform transition-all duration-300 hover:translate-y-[-5px] hover:shadow-xl;
+}
+
+.glass-card {
+  @apply bg-background/70 backdrop-blur-md border border-border/50 rounded-xl shadow-sm transition-all duration-300;
+}
+
+.glass-card:hover {
+  @apply shadow-lg border-border/70;
+}
+
+/* Enhanced smooth scrolling */
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 2rem;
+}
+
+/* Enhanced button effects */
+.press-effect {
+  transition: transform 0.15s cubic-bezier(0.2, 0, 0.2, 1);
+}
+
+.press-effect:active {
+  transform: scale(0.97);
+}
+
+/* Enhanced loading spinner */
+.loading-spinner {
+  @apply w-12 h-12 border-3 border-transparent border-t-primary rounded-full;
+  animation: spin 1s linear infinite, pulse-ring 2s infinite;
+}
+
+/* RTL enhancements */
+[dir="rtl"] {
+  font-feature-settings: "tnum", "lnum";
+}
+
+/* Enhanced focus states */
+:focus-visible {
+  @apply outline-none ring-2 ring-primary/40 ring-offset-2 ring-offset-background;
+}
+
+/* Enhanced selection styles */
+::selection {
+  @apply bg-primary/20 text-primary-foreground;
+}
+
+/* Enhanced placeholder styles */
+::placeholder {
+  @apply text-muted-foreground/60;
+}
+
+/* Enhanced disabled styles */
+:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+/* Enhanced reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Enhanced high contrast support */
+@media (prefers-contrast: high) {
+  * {
+    @apply border-2;
+  }
+}
