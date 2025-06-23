@@ -120,6 +120,59 @@ html {
   @apply text-muted-foreground/60;
 }
 
+/* Mobile-specific styles */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.h-safe-bottom {
+  height: env(safe-area-inset-bottom);
+}
+
+/* Touch-friendly styles */
+@media (hover: none) and (pointer: coarse) {
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Mobile viewport fixes */
+@media screen and (max-width: 768px) {
+  .mobile-vh {
+    height: 100vh;
+    height: 100dvh;
+  }
+  
+  .mobile-scroll {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+}
+
+/* PWA styles */
+@media (display-mode: standalone) {
+  .pwa-only {
+    display: block;
+  }
+}
+
+/* Camera overlay styles */
+.camera-overlay {
+  background: linear-gradient(
+    45deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 70%
+  );
+  animation: camera-scan 2s ease-in-out infinite;
+}
+
+@keyframes camera-scan {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
 /* Enhanced disabled styles */
 :disabled {
   @apply opacity-50 cursor-not-allowed;

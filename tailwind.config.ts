@@ -124,4 +124,9 @@ export default {
     },
   },
   plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
+  safelist: [
+    'safe-area-bottom',
+    'h-safe-bottom',
+    'pb-safe-bottom'
+  ],
 } satisfies Config;

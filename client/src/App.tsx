@@ -7,11 +7,10 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { EnhancedThemeProvider } from "./contexts/EnhancedThemeContext";
 import { SessionProvider } from "./contexts/SessionContext";
 import { AuthProvider } from "./contexts/AuthContext";
-import Index from "./pages/Index";
-import HomePage from "./pages/HomePage";
+import { LanguageProvider } from "./contexts/LanguageContext";
+import MobileApp from "./components/MobileApp";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
-import NotFound from "./pages/NotFound";
 import { motion, AnimatePresence } from "framer-motion";
 import "./App.css";
 
@@ -66,17 +65,15 @@ const App = () => (
                   closeButton={true}
                 />
                 
-                {/* Enhanced application routing with page transitions */}
+                {/* Mobile-first application */}
                 <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5">
-                  <AnimatePresence mode="wait">
+                  <LanguageProvider>
                     <Routes>
-                      <Route path="/" element={<Index />} />
-                      <Route path="/home" element={<HomePage />} />
                       <Route path="/login" element={<LoginPage />} />
                       <Route path="/signup" element={<SignupPage />} />
-                      <Route path="*" element={<NotFound />} />
+                      <Route path="/*" element={<MobileApp />} />
                     </Routes>
-                  </AnimatePresence>
+                  </LanguageProvider>
                 </div>
               </motion.div>
             </TooltipProvider>
