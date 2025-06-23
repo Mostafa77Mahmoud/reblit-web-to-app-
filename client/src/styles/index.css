@@ -96,7 +96,7 @@ html {
 
 /* Enhanced loading spinner */
 .loading-spinner {
-  @apply w-12 h-12 border-3 border-transparent border-t-primary rounded-full;
+  @apply w-12 h-12 border-4 border-transparent border-t-primary rounded-full;
   animation: spin 1s linear infinite, pulse-ring 2s infinite;
 }
 
