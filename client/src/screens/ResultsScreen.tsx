@@ -105,7 +105,7 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ onBack, onNavigate, sessi
                 <ArrowLeft className="w-5 h-5" />
               </motion.button>
               <div>
-                <h1 className="text-2xl font-bold">Analysis Results</h1>
+                <h1 className="text-2xl font-bold">{t('analysis.analysisResults')}</h1>
                 <p className="text-sm text-muted-foreground">Session: {data.session_id}</p>
               </div>
             </div>
@@ -113,11 +113,11 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ onBack, onNavigate, sessi
             <div className="flex items-center space-x-2">
               <Button variant="outline" size="sm">
                 <Share className="w-4 h-4 mr-2" />
-                Share
+                {t('common.share')}
               </Button>
               <Button variant="outline" size="sm">
                 <Download className="w-4 h-4 mr-2" />
-                Export
+                {t('common.download')}
               </Button>
             </div>
           </div>
@@ -134,7 +134,7 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ onBack, onNavigate, sessi
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                {t(`analysis.${tab}`)}
               </button>
             ))}
           </div>
@@ -156,8 +156,8 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ onBack, onNavigate, sessi
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <h3 className="text-lg font-semibold mb-1">Compliance Score</h3>
-                      <p className="text-sm text-muted-foreground">Overall Shariaa compliance rating</p>
+                      <h3 className="text-lg font-semibold mb-1">{t('analysis.complianceScore')}</h3>
+                      <p className="text-sm text-muted-foreground">{t('analysis.overallCompliance')}</p>
                     </div>
                     <div className="text-right">
                       <div className="text-3xl font-bold text-primary">
@@ -169,8 +169,8 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ onBack, onNavigate, sessi
                                   data.compliance_stats.compliance_percentage >= 60 ? 'bg-yellow-100 text-yellow-700' :
                                   'bg-red-100 text-red-700'}
                       >
-                        {data.compliance_stats.compliance_percentage >= 80 ? 'Excellent' :
-                         data.compliance_stats.compliance_percentage >= 60 ? 'Good' : 'Needs Review'}
+                        {data.compliance_stats.compliance_percentage >= 80 ? t('analysis.excellent') :
+                         data.compliance_stats.compliance_percentage >= 60 ? t('analysis.good') : t('analysis.needsReview')}
                       </Badge>
                     </div>
                   </div>
@@ -180,15 +180,15 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ onBack, onNavigate, sessi
                   <div className="grid grid-cols-3 gap-4 text-center">
                     <div>
                       <div className="text-2xl font-bold text-foreground">{data.compliance_stats.total_terms}</div>
-                      <div className="text-xs text-muted-foreground">Total Terms</div>
+                      <div className="text-xs text-muted-foreground">{t('analysis.totalTerms')}</div>
                     </div>
                     <div>
                       <div className="text-2xl font-bold text-green-600">{data.compliance_stats.compliant_count}</div>
-                      <div className="text-xs text-muted-foreground">Compliant</div>
+                      <div className="text-xs text-muted-foreground">{t('analysis.compliantTerms')}</div>
                     </div>
                     <div>
                       <div className="text-2xl font-bold text-red-600">{data.compliance_stats.non_compliant_count}</div>
-                      <div className="text-xs text-muted-foreground">Non-Compliant</div>
+                      <div className="text-xs text-muted-foreground">{t('analysis.nonCompliantTerms')}</div>
                     </div>
                   </div>
                 </CardContent>

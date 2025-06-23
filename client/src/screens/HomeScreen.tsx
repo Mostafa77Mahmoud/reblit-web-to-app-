@@ -87,21 +87,21 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
 
   const quickStats: QuickStat[] = [
     {
-      label: 'Total Analyses',
+      label: t('home.totalAnalyses'),
       value: userStats?.total_analyses?.toString() || '0',
       icon: <FileText className="w-5 h-5" />,
       trend: 12,
       color: 'from-blue-500 to-cyan-500'
     },
     {
-      label: 'Compliance Rate',
+      label: t('home.complianceRate'),
       value: userStats?.compliance_rate ? `${Math.round(userStats.compliance_rate)}%` : '0%',
       icon: <Shield className="w-5 h-5" />,
       trend: 5,
       color: 'from-green-500 to-emerald-500'
     },
     {
-      label: 'This Month',
+      label: t('home.thisMonth'),
       value: userStats?.analyses_this_month?.toString() || '0',
       icon: <TrendingUp className="w-5 h-5" />,
       trend: 23,
@@ -145,7 +145,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              Good {timeOfDay}
+              {t(`home.good${timeOfDay}`)}
             </motion.h1>
             <motion.p
               className="text-muted-foreground"
@@ -153,7 +153,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
             >
-              {isGuestMode ? 'Guest User' : user?.username || user?.email?.split('@')[0] || 'User'}
+              {isGuestMode ? t('home.guestUser') : user?.username || user?.email?.split('@')[0] || 'User'}
             </motion.p>
           </div>
           
@@ -214,7 +214,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
             onClick={() => onNavigate('camera')}
           >
             <Camera className="w-8 h-8 mb-3" />
-            <h3 className="font-bold text-lg">Scan Document</h3>
+            <h3 className="font-bold text-lg">{t('home.scanDocument')}</h3>
             <p className="text-emerald-100 text-sm">Use camera to analyze</p>
           </motion.button>
 
@@ -225,7 +225,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
             onClick={() => onNavigate('upload')}
           >
             <FileText className="w-8 h-8 mb-3" />
-            <h3 className="font-bold text-lg">Upload File</h3>
+            <h3 className="font-bold text-lg">{t('home.uploadFile')}</h3>
             <p className="text-blue-100 text-sm">Select from device</p>
           </motion.button>
         </motion.div>
@@ -280,7 +280,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.6 }}
           >
-            Recent Analyses
+            {t('home.recentAnalyses')}
           </motion.h2>
           <Button
             variant="ghost"
@@ -288,7 +288,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
             onClick={() => onNavigate('history')}
             className="text-primary"
           >
-            View All
+            {t('home.viewAll')}
           </Button>
         </div>
 
@@ -363,13 +363,13 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
           ) : (
             <div className="text-center py-8">
               <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-              <h3 className="font-semibold text-lg mb-2">No Analyses Yet</h3>
+              <h3 className="font-semibold text-lg mb-2">{t('home.noAnalyses')}</h3>
               <p className="text-muted-foreground text-sm mb-4">
-                Start by scanning or uploading your first contract
+                {t('home.startFirst')}
               </p>
               <Button onClick={() => onNavigate('camera')} className="bg-gradient-to-r from-emerald-500 to-teal-500">
                 <Camera className="w-4 h-4 mr-2" />
-                Scan Document
+                {t('home.scanDocument')}
               </Button>
             </div>
           )}

@@ -155,7 +155,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ onBack, onNavigate }) => 
               >
                 <ArrowLeft className="w-5 h-5" />
               </motion.button>
-              <h1 className="text-2xl font-bold">Profile</h1>
+              <h1 className="text-2xl font-bold">{t('profile.profile')}</h1>
             </div>
             
             <Button
@@ -200,10 +200,10 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ onBack, onNavigate }) => 
                 
                 <div className="flex-1">
                   <h2 className="text-2xl font-bold mb-1">
-                    {isGuestMode ? 'Guest User' : user?.username || user?.email || 'User Name'}
+                    {isGuestMode ? t('home.guestUser') : user?.username || user?.email || 'User Name'}
                   </h2>
                   <p className="text-muted-foreground mb-2">
-                    {isGuestMode ? 'Temporary Account' : user?.email || 'user@example.com'}
+                    {isGuestMode ? t('profile.temporaryAccount') : user?.email || 'user@example.com'}
                   </p>
                   
                   <div className="flex items-center space-x-2">
@@ -353,7 +353,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ onBack, onNavigate }) => 
             onClick={logout}
           >
             <LogOut className="w-4 h-4 mr-2" />
-            {isGuestMode ? 'Exit Guest Mode' : 'Sign Out'}
+            {isGuestMode ? 'Exit Guest Mode' : t('auth.logout')}
           </Button>
         </motion.div>
       </div>

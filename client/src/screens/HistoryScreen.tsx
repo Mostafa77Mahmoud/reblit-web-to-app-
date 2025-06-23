@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -138,7 +138,7 @@ const HistoryScreen: React.FC<HistoryScreenProps> = ({ onBack, onNavigate }) => 
               >
                 <ArrowLeft className="w-5 h-5" />
               </motion.button>
-              <h1 className="text-2xl font-bold">Analysis History</h1>
+              <h1 className="text-2xl font-bold">{t('history.analysisHistory')}</h1>
             </div>
             
             <div className="flex items-center space-x-2">
@@ -157,7 +157,7 @@ const HistoryScreen: React.FC<HistoryScreenProps> = ({ onBack, onNavigate }) => 
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
                 type="text"
-                placeholder="Search by title, institution, or tags..."
+                placeholder={t('history.searchHistory')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 pr-4 py-2 bg-card border-border/50"
@@ -173,9 +173,9 @@ const HistoryScreen: React.FC<HistoryScreenProps> = ({ onBack, onNavigate }) => 
                   onClick={() => setSelectedFilter(filter as any)}
                   className="whitespace-nowrap"
                 >
-                  {filter === 'all' ? 'All' : 
-                   filter === 'compliant' ? 'Compliant' :
-                   filter === 'warning' ? 'Warning' : 'Non-Compliant'}
+                  {filter === 'all' ? t('history.all') : 
+                   filter === 'compliant' ? t('history.compliant') :
+                   filter === 'warning' ? t('history.warning') : t('history.nonCompliant')}
                 </Button>
               ))}
               
@@ -183,7 +183,7 @@ const HistoryScreen: React.FC<HistoryScreenProps> = ({ onBack, onNavigate }) => 
               
               <Button variant="outline" size="sm">
                 <Filter className="w-4 h-4 mr-2" />
-                Sort: {sortBy === 'date' ? 'Date' : sortBy === 'score' ? 'Score' : 'Name'}
+                Sort: {sortBy === 'date' ? t('history.date') : sortBy === 'score' ? t('history.score') : t('history.name')}
               </Button>
             </div>
           </div>
@@ -349,7 +349,7 @@ const HistoryScreen: React.FC<HistoryScreenProps> = ({ onBack, onNavigate }) => 
                   {/* Action Buttons */}
                   <div className="flex items-center justify-between pt-2 border-t border-border/50">
                     <Button variant="ghost" size="sm" className="text-primary">
-                      View Details
+                      {t('history.viewDetails')}
                     </Button>
                     <div className="flex items-center space-x-1">
                       <Button variant="ghost" size="sm">

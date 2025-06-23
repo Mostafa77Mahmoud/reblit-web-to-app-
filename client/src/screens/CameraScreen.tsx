@@ -210,7 +210,7 @@ const CameraScreen: React.FC<CameraScreenProps> = ({ onNavigate, onBack }) => {
                 >
                   <div className="absolute -top-8 left-1/2 transform -translate-x-1/2">
                     <p className="text-white text-sm font-medium bg-black/50 px-3 py-1 rounded-full">
-                      Position document within frame
+                      {t('camera.positionDocument')}
                     </p>
                   </div>
                 </motion.div>

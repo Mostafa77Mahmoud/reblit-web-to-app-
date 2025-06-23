@@ -42,8 +42,14 @@ export async function apiRequest<T>(
     const response = await fetch(url, config);
     
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`API Error: ${response.status} - ${errorText}`);
+      let errorMessage = `API Error: ${response.status}`;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorData.error || errorMessage;
+      } catch {
+        errorMessage = await response.text() || errorMessage;
+      }
+      throw new Error(errorMessage);
     }
 
     const contentType = response.headers.get('content-type');
