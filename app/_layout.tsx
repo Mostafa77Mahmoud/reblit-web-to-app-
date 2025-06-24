@@ -1,17 +1,29 @@
 
-import { Stack } from 'expo-router';
+import React from 'react';
+import { View, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import MobileApp from './MobileApp';
+import { AuthProvider } from './contexts/AuthContext';
+import { LanguageProvider } from './contexts/LanguageContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 
 export default function RootLayout() {
   return (
-    <>
-      <Stack>
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="camera" options={{ headerShown: false }} />
-        <Stack.Screen name="history" options={{ headerShown: false }} />
-        <Stack.Screen name="profile" options={{ headerShown: false }} />
-      </Stack>
-      <StatusBar style="auto" />
-    </>
+    <ThemeProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <View style={styles.container}>
+            <StatusBar style="auto" />
+            <MobileApp />
+          </View>
+        </AuthProvider>
+      </LanguageProvider>
+    </ThemeProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});

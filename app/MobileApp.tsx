@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Animated, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Animated, Dimensions, StatusBar } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import OnboardingScreen from './screens/OnboardingScreen';
 import HomeScreen from './screens/HomeScreen';
@@ -10,22 +10,34 @@ import ProfileScreen from './screens/ProfileScreen';
 import ResultsScreen from './screens/ResultsScreen';
 import MobileNavigation from './components/MobileNavigation';
 import { useAuth } from './contexts/AuthContext';
+import { useLanguage } from './contexts/LanguageContext';
+import { useTheme } from './contexts/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
 type ScreenType = 'onboarding' | 'home' | 'camera' | 'history' | 'profile' | 'search' | 'notifications' | 'upload' | 'results';
 
+interface NavigationData {
+  sessionId?: string;
+  analysisData?: any;
+}
+
 const MobileApp = () => {
   const { isAuthenticated } = useAuth();
+  const { isRTL } = useLanguage();
+  const { theme } = useTheme();
   const [currentScreen, setCurrentScreen] = useState<ScreenType>('onboarding');
+  const [navigationData, setNavigationData] = useState<NavigationData>({});
   const [hasSeenOnboarding, setHasSeenOnboarding] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const slideAnim = new Animated.Value(0);
 
   useEffect(() => {
     const initializeApp = async () => {
-      // Check if user has seen onboarding (you can implement AsyncStorage here)
-      if (hasSeenOnboarding) {
+      // Check if user has seen onboarding
+      const onboardingSeen = localStorage.getItem('shariaa_onboarding_seen');
+      if (onboardingSeen === 'true') {
+        setHasSeenOnboarding(true);
         setCurrentScreen('home');
       } else {
         setCurrentScreen('onboarding');
@@ -34,21 +46,24 @@ const MobileApp = () => {
     };
 
     initializeApp();
-  }, [hasSeenOnboarding]);
+  }, []);
 
   const handleOnboardingComplete = () => {
     setHasSeenOnboarding(true);
+    localStorage.setItem('shariaa_onboarding_seen', 'true');
     setCurrentScreen('home');
   };
 
-  const handleNavigate = (screen: ScreenType) => {
+  const handleNavigate = (screen: ScreenType, data?: NavigationData) => {
+    setNavigationData(data || {});
+    
     Animated.timing(slideAnim, {
-      toValue: width,
+      toValue: isRTL ? -width : width,
       duration: 300,
       useNativeDriver: true,
     }).start(() => {
       setCurrentScreen(screen);
-      slideAnim.setValue(-width);
+      slideAnim.setValue(isRTL ? width : -width);
       Animated.timing(slideAnim, {
         toValue: 0,
         duration: 300,
@@ -73,32 +88,58 @@ const MobileApp = () => {
       default:
         setCurrentScreen('home');
     }
+    setNavigationData({});
+  };
+
+  const handleAnalysisComplete = (analysisData: any) => {
+    handleNavigate('results', { analysisData });
   };
 
   const renderScreen = () => {
+    const screenProps = {
+      onNavigate: handleNavigate,
+      onBack: handleBack,
+      ...navigationData,
+    };
+
     switch (currentScreen) {
       case 'onboarding':
         return <OnboardingScreen onComplete={handleOnboardingComplete} />;
       case 'home':
-        return <HomeScreen onNavigate={handleNavigate} />;
+        return <HomeScreen {...screenProps} />;
       case 'camera':
-        return <CameraScreen onNavigate={handleNavigate} onBack={handleBack} />;
+        return (
+          <CameraScreen 
+            {...screenProps} 
+            onAnalysisComplete={handleAnalysisComplete}
+          />
+        );
       case 'history':
-        return <HistoryScreen onBack={handleBack} onNavigate={handleNavigate} />;
+        return <HistoryScreen {...screenProps} />;
       case 'profile':
-        return <ProfileScreen onBack={handleBack} onNavigate={handleNavigate} />;
+        return <ProfileScreen {...screenProps} />;
       case 'results':
-        return <ResultsScreen onBack={handleBack} onNavigate={handleNavigate} />;
+        return <ResultsScreen {...screenProps} />;
       default:
-        return <HomeScreen onNavigate={handleNavigate} />;
+        return <HomeScreen {...screenProps} />;
     }
   };
 
   const showNavigation = ['home', 'search', 'history', 'profile'].includes(currentScreen);
 
+  const isDarkMode = theme === 'dark';
+  const containerStyle = {
+    ...styles.container,
+    backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
+  };
+
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.loadingContainer}>
+      <SafeAreaView style={[styles.loadingContainer, { backgroundColor: isDarkMode ? '#1f2937' : '#10b981' }]}>
+        <StatusBar 
+          barStyle={isDarkMode ? 'light-content' : 'light-content'} 
+          backgroundColor={isDarkMode ? '#1f2937' : '#10b981'} 
+        />
         <Text style={styles.loadingText}>Loading Shariaa Analyzer...</Text>
       </SafeAreaView>
     );
@@ -106,19 +147,30 @@ const MobileApp = () => {
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView style={styles.container}>
-        <Animated.View style={[styles.screenContainer, { transform: [{ translateX: slideAnim }] }]}>
+      <StatusBar 
+        barStyle={isDarkMode ? 'light-content' : 'dark-content'} 
+        backgroundColor={isDarkMode ? '#1f2937' : '#ffffff'} 
+      />
+      <SafeAreaView style={[containerStyle, isRTL && styles.rtlContainer]}>
+        <Animated.View style={[
+          styles.screenContainer, 
+          { transform: [{ translateX: slideAnim }] }
+        ]}>
           {renderScreen()}
         </Animated.View>
         
         {showNavigation && (
           <MobileNavigation 
             currentScreen={currentScreen} 
-            onNavigate={handleNavigate} 
+            onNavigate={handleNavigate}
+            theme={theme}
           />
         )}
         
-        <View style={styles.statusBar} />
+        <View style={[
+          styles.statusBar, 
+          { backgroundColor: isDarkMode ? '#10b981' : '#10b981' }
+        ]} />
       </SafeAreaView>
     </SafeAreaProvider>
   );
@@ -128,6 +180,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#ffffff',
+  },
+  rtlContainer: {
+    direction: 'rtl',
   },
   loadingContainer: {
     flex: 1,

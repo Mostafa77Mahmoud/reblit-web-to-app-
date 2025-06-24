@@ -1,6 +1,6 @@
 
 // Mobile API service using your backend endpoints
-const API_BASE_URL = 'http://localhost:5000'; // Update this with your Replit URL
+const API_BASE_URL = 'http://localhost:5000'; // Update this with your Replit URL when deployed
 
 // Type definitions from your API
 export interface ApiAnalysisTerm {
@@ -32,6 +32,16 @@ export interface SessionDetailsApiResponse {
   original_filename: string;
   analysis_timestamp: string;
   analysis_results: ApiAnalysisTerm[];
+  compliance_percentage?: number;
+  detected_contract_language: 'ar' | 'en';
+  original_contract_plain?: string;
+}
+
+export interface GenerateModifiedContractApiResponse {
+  success: boolean;
+  message: string;
+  modified_docx_cloudinary_url?: string;
+  modified_txt_cloudinary_url?: string;
 }
 
 async function handleResponse<T>(response: Response): Promise<T> {
@@ -107,7 +117,7 @@ export const getUserStats = async (): Promise<any> => {
     return handleResponse<any>(response);
   } catch (error) {
     console.log('Stats not available in guest mode');
-    return null;
+    return { total_analyses: 0, compliance_rate: 0, analyses_this_month: 0 };
   }
 };
 
@@ -146,7 +156,7 @@ export const askQuestion = async (
   return handleResponse<string>(response);
 };
 
-export const generateModifiedContract = async (sessionId: string): Promise<any> => {
+export const generateModifiedContract = async (sessionId: string): Promise<GenerateModifiedContractApiResponse> => {
   const response = await fetch(`${API_BASE_URL}/generate_modified_contract`, {
     method: 'POST',
     headers: { 
@@ -155,7 +165,59 @@ export const generateModifiedContract = async (sessionId: string): Promise<any> 
     },
     body: JSON.stringify({ session_id: sessionId }),
   });
+  return handleResponse<GenerateModifiedContractApiResponse>(response);
+};
+
+export const confirmModification = async (
+  sessionId: string, 
+  termId: string, 
+  confirmedText: string
+): Promise<any> => {
+  const response = await fetch(`${API_BASE_URL}/confirm_modification`, {
+    method: 'POST',
+    headers: { 
+      'Content-Type': 'application/json',
+      'ngrok-skip-browser-warning': 'true'
+    },
+    body: JSON.stringify({ 
+      session_id: sessionId, 
+      term_id: termId, 
+      confirmed_text: confirmedText 
+    }),
+  });
   return handleResponse<any>(response);
+};
+
+// Local storage functions for offline support
+export const saveSessionLocally = (session: SessionDetailsApiResponse): void => {
+  try {
+    const sessions = getLocalSessions();
+    const updatedSessions = sessions.filter(s => s.session_id !== session.session_id);
+    updatedSessions.unshift(session);
+    localStorage.setItem('shariaa_sessions', JSON.stringify(updatedSessions.slice(0, 50))); // Keep last 50
+  } catch (error) {
+    console.error('Failed to save session locally:', error);
+  }
+};
+
+export const getLocalSessions = (): SessionDetailsApiResponse[] => {
+  try {
+    const sessions = localStorage.getItem('shariaa_sessions');
+    return sessions ? JSON.parse(sessions) : [];
+  } catch (error) {
+    console.error('Failed to load local sessions:', error);
+    return [];
+  }
+};
+
+export const deleteLocalSession = (sessionId: string): void => {
+  try {
+    const sessions = getLocalSessions();
+    const updatedSessions = sessions.filter(s => s.session_id !== sessionId);
+    localStorage.setItem('shariaa_sessions', JSON.stringify(updatedSessions));
+  } catch (error) {
+    console.error('Failed to delete local session:', error);
+  }
 };
 
 // API object for easier imports
@@ -166,4 +228,8 @@ export const api = {
   getSessionDetails,
   askQuestion,
   generateModifiedContract,
+  confirmModification,
+  saveSessionLocally,
+  getLocalSessions,
+  deleteLocalSession,
 };

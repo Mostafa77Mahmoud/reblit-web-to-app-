@@ -7,59 +7,82 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
+  TextInput,
+  Modal,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../contexts/AuthContext';
+import { api, ApiAnalysisTerm, SessionDetailsApiResponse } from '../services/api';
 
 interface ResultsScreenProps {
   onBack: () => void;
   onNavigate: (screen: string) => void;
+  sessionId?: string;
+  analysisData?: any;
 }
 
-const ResultsScreen: React.FC<ResultsScreenProps> = ({ onBack, onNavigate }) => {
-  const [analysisResults, setAnalysisResults] = useState<any>(null);
+const ResultsScreen: React.FC<ResultsScreenProps> = ({ 
+  onBack, 
+  onNavigate, 
+  sessionId, 
+  analysisData 
+}) => {
+  const { t, isRTL } = useLanguage();
+  const { isGuestMode } = useAuth();
+  const [sessionData, setSessionData] = useState<SessionDetailsApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [questionModalVisible, setQuestionModalVisible] = useState(false);
+  const [selectedTerm, setSelectedTerm] = useState<ApiAnalysisTerm | null>(null);
+  const [questionText, setQuestionText] = useState('');
+  const [isAskingQuestion, setIsAskingQuestion] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generalQuestionVisible, setGeneralQuestionVisible] = useState(false);
+  const [generalQuestion, setGeneralQuestion] = useState('');
 
   useEffect(() => {
-    // Mock analysis results - replace with actual API call
-    setTimeout(() => {
-      setAnalysisResults({
-        session_id: 'mock-session-123',
-        original_filename: 'contract_analysis.pdf',
-        compliance_percentage: 87,
-        total_terms: 12,
-        compliant_terms: 10,
-        non_compliant_terms: 2,
-        detected_language: 'en',
-        analysis_results: [
-          {
-            term_id: '1',
-            term_text: 'Interest rate of 5% per annum',
-            is_valid_sharia: false,
-            sharia_issue: 'Interest (Riba) is prohibited in Islamic finance',
-            reference_number: 'Quran 2:275',
-            modified_term: 'Profit sharing arrangement based on agreed percentage',
-          },
-          {
-            term_id: '2',
-            term_text: 'Payment terms: 30 days net',
-            is_valid_sharia: true,
-            sharia_issue: null,
-            reference_number: null,
-            modified_term: null,
-          },
-          {
-            term_id: '3',
-            term_text: 'Gambling clause for dispute resolution',
-            is_valid_sharia: false,
-            sharia_issue: 'Gambling (Maysir) is prohibited',
-            reference_number: 'Quran 5:90',
-            modified_term: 'Islamic arbitration for dispute resolution',
-          },
-        ],
-      });
+    loadSessionData();
+  }, [sessionId, analysisData]);
+
+  const loadSessionData = async () => {
+    try {
+      setLoading(true);
+      
+      if (analysisData) {
+        // Use provided analysis data
+        const mockSession: SessionDetailsApiResponse = {
+          _id: analysisData.session_id || 'temp',
+          session_id: analysisData.session_id || 'temp',
+          original_filename: analysisData.original_filename || 'Document',
+          analysis_timestamp: new Date().toISOString(),
+          analysis_results: analysisData.analysis_results || [],
+          compliance_percentage: calculateCompliancePercentage(analysisData.analysis_results || []),
+          detected_contract_language: analysisData.detected_contract_language || 'en',
+          original_contract_plain: analysisData.original_contract_plain || '',
+        };
+        setSessionData(mockSession);
+        
+        // Save to local storage
+        api.saveSessionLocally(mockSession);
+      } else if (sessionId) {
+        // Fetch from API
+        const data = await api.getSessionDetails(sessionId);
+        setSessionData(data);
+      }
+    } catch (error) {
+      console.error('Failed to load session data:', error);
+      Alert.alert(t('common.error'), 'Failed to load analysis results');
+    } finally {
       setLoading(false);
-    }, 1000);
-  }, []);
+    }
+  };
+
+  const calculateCompliancePercentage = (terms: ApiAnalysisTerm[]): number => {
+    if (terms.length === 0) return 0;
+    const compliantTerms = terms.filter(term => term.is_valid_sharia).length;
+    return Math.round((compliantTerms / terms.length) * 100);
+  };
 
   const getComplianceColor = (percentage: number) => {
     if (percentage >= 80) return '#10b981';
@@ -68,147 +91,267 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ onBack, onNavigate }) => 
   };
 
   const getComplianceStatus = (percentage: number) => {
-    if (percentage >= 80) return 'Excellent';
-    if (percentage >= 60) return 'Good';
-    return 'Needs Review';
+    if (percentage >= 80) return t('results.excellent');
+    if (percentage >= 60) return t('results.good');
+    return t('results.needsReview');
   };
 
-  const handleDownload = () => {
-    Alert.alert('Download', 'Download functionality will be implemented');
+  const handleAskQuestion = (term?: ApiAnalysisTerm) => {
+    if (term) {
+      setSelectedTerm(term);
+      setQuestionModalVisible(true);
+    } else {
+      setGeneralQuestionVisible(true);
+    }
+    setQuestionText('');
   };
 
-  const handleShare = () => {
-    Alert.alert('Share', 'Share functionality will be implemented');
+  const submitQuestion = async () => {
+    if (!questionText.trim() || !sessionData) return;
+
+    try {
+      setIsAskingQuestion(true);
+      
+      const answer = await api.askQuestion(
+        sessionData.session_id,
+        questionText,
+        selectedTerm?.term_id,
+        selectedTerm?.term_text
+      );
+
+      Alert.alert(
+        t('common.success'),
+        answer,
+        [
+          {
+            text: t('common.close'),
+            onPress: () => {
+              setQuestionModalVisible(false);
+              setGeneralQuestionVisible(false);
+              setQuestionText('');
+              setSelectedTerm(null);
+            }
+          }
+        ]
+      );
+    } catch (error) {
+      Alert.alert(t('common.error'), 'Failed to get answer');
+    } finally {
+      setIsAskingQuestion(false);
+    }
   };
 
-  const handleRegenerateContract = () => {
-    Alert.alert('Regenerate', 'Contract regeneration will be implemented');
+  const handleGenerateCompliant = async () => {
+    if (!sessionData) return;
+
+    try {
+      setIsGenerating(true);
+      const result = await api.generateModifiedContract(sessionData.session_id);
+      
+      if (result.success) {
+        Alert.alert(
+          t('common.success'),
+          'Compliant contract generated successfully!',
+          [
+            {
+              text: t('results.download'),
+              onPress: () => {
+                // Handle download - would open URL in browser
+                if (result.modified_docx_cloudinary_url) {
+                  // Open URL or handle download
+                  console.log('Download URL:', result.modified_docx_cloudinary_url);
+                }
+              }
+            },
+            { text: t('common.close') }
+          ]
+        );
+      }
+    } catch (error) {
+      Alert.alert(t('common.error'), 'Failed to generate compliant contract');
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Processing analysis results...</Text>
+          <ActivityIndicator size="large" color="#10b981" />
+          <Text style={[styles.loadingText, isRTL && styles.rtlText]}>
+            {t('common.loading')}
+          </Text>
         </View>
       </SafeAreaView>
     );
   }
 
+  if (!sessionData) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <Text style={[styles.errorText, isRTL && styles.rtlText]}>
+            {t('common.error')}
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const compliancePercentage = sessionData.compliance_percentage || 0;
+  const compliantTerms = sessionData.analysis_results.filter(term => term.is_valid_sharia).length;
+  const nonCompliantTerms = sessionData.analysis_results.length - compliantTerms;
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, isRTL && styles.rtlContainer]}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, isRTL && styles.rtlHeader]}>
         <TouchableOpacity onPress={onBack} style={styles.backButton}>
-          <Text style={styles.backIcon}>←</Text>
+          <Text style={styles.backIcon}>{isRTL ? '→' : '←'}</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Analysis Results</Text>
-        <TouchableOpacity onPress={handleShare} style={styles.shareButton}>
-          <Text style={styles.shareIcon}>↗️</Text>
+        <Text style={[styles.headerTitle, isRTL && styles.rtlText]}>
+          {t('results.title')}
+        </Text>
+        <TouchableOpacity 
+          onPress={() => handleAskQuestion()}
+          style={styles.askButton}
+        >
+          <Text style={styles.askIcon}>❓</Text>
         </TouchableOpacity>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Summary Card */}
         <View style={styles.summaryCard}>
-          <View style={styles.summaryHeader}>
-            <Text style={styles.fileName}>{analysisResults.original_filename}</Text>
+          <View style={[styles.summaryHeader, isRTL && styles.rtlHeader]}>
+            <Text style={[styles.fileName, isRTL && styles.rtlText]}>
+              {sessionData.original_filename}
+            </Text>
             <View style={[
               styles.complianceBadge,
-              { backgroundColor: getComplianceColor(analysisResults.compliance_percentage) }
+              { backgroundColor: getComplianceColor(compliancePercentage) }
             ]}>
               <Text style={styles.complianceText}>
-                {analysisResults.compliance_percentage}%
+                {compliancePercentage}%
               </Text>
             </View>
           </View>
 
           <Text style={[
             styles.complianceStatus,
-            { color: getComplianceColor(analysisResults.compliance_percentage) }
+            { color: getComplianceColor(compliancePercentage) },
+            isRTL && styles.rtlText
           ]}>
-            {getComplianceStatus(analysisResults.compliance_percentage)}
+            {getComplianceStatus(compliancePercentage)}
           </Text>
 
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>{analysisResults.total_terms}</Text>
-              <Text style={styles.statLabel}>Total Terms</Text>
+              <Text style={styles.statValue}>{sessionData.analysis_results.length}</Text>
+              <Text style={[styles.statLabel, isRTL && styles.rtlText]}>
+                {t('results.totalTerms')}
+              </Text>
             </View>
             <View style={styles.statItem}>
               <Text style={[styles.statValue, { color: '#10b981' }]}>
-                {analysisResults.compliant_terms}
+                {compliantTerms}
               </Text>
-              <Text style={styles.statLabel}>Compliant</Text>
+              <Text style={[styles.statLabel, isRTL && styles.rtlText]}>
+                {t('results.compliant')}
+              </Text>
             </View>
             <View style={styles.statItem}>
               <Text style={[styles.statValue, { color: '#ef4444' }]}>
-                {analysisResults.non_compliant_terms}
+                {nonCompliantTerms}
               </Text>
-              <Text style={styles.statLabel}>Issues</Text>
+              <Text style={[styles.statLabel, isRTL && styles.rtlText]}>
+                {t('results.issues')}
+              </Text>
             </View>
           </View>
         </View>
 
         {/* Action Buttons */}
         <View style={styles.actionButtons}>
-          <TouchableOpacity style={styles.primaryButton} onPress={handleRegenerateContract}>
-            <Text style={styles.primaryButtonText}>Generate Compliant Version</Text>
+          <TouchableOpacity 
+            style={[styles.primaryButton, isGenerating && styles.disabledButton]} 
+            onPress={handleGenerateCompliant}
+            disabled={isGenerating}
+          >
+            {isGenerating ? (
+              <ActivityIndicator color="#ffffff" />
+            ) : (
+              <Text style={[styles.primaryButtonText, isRTL && styles.rtlText]}>
+                {t('results.generateCompliant')}
+              </Text>
+            )}
           </TouchableOpacity>
-          <View style={styles.secondaryButtons}>
-            <TouchableOpacity style={styles.secondaryButton} onPress={handleDownload}>
-              <Text style={styles.secondaryButtonText}>Download</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.secondaryButton} onPress={handleShare}>
-              <Text style={styles.secondaryButtonText}>Share</Text>
-            </TouchableOpacity>
-          </View>
         </View>
 
         {/* Terms Analysis */}
         <View style={styles.termsSection}>
-          <Text style={styles.sectionTitle}>Detailed Analysis</Text>
+          <Text style={[styles.sectionTitle, isRTL && styles.rtlText]}>
+            {t('results.detailedAnalysis')}
+          </Text>
           
-          {analysisResults.analysis_results.map((term: any, index: number) => (
+          {sessionData.analysis_results.map((term: ApiAnalysisTerm, index: number) => (
             <View
               key={term.term_id}
               style={[
                 styles.termCard,
-                term.is_valid_sharia ? styles.compliantTerm : styles.nonCompliantTerm
+                term.is_valid_sharia ? styles.compliantTerm : styles.nonCompliantTerm,
+                isRTL && styles.rtlCard
               ]}
             >
-              <View style={styles.termHeader}>
-                <View style={styles.termStatus}>
+              <View style={[styles.termHeader, isRTL && styles.rtlHeader]}>
+                <View style={[styles.termStatus, isRTL && styles.rtlStatus]}>
                   <Text style={styles.statusIcon}>
                     {term.is_valid_sharia ? '✅' : '❌'}
                   </Text>
                   <Text style={[
                     styles.statusText,
-                    { color: term.is_valid_sharia ? '#10b981' : '#ef4444' }
+                    { color: term.is_valid_sharia ? '#10b981' : '#ef4444' },
+                    isRTL && styles.rtlText
                   ]}>
-                    {term.is_valid_sharia ? 'Compliant' : 'Non-Compliant'}
+                    {term.is_valid_sharia ? t('results.compliantTerm') : t('results.nonCompliant')}
                   </Text>
                 </View>
-                <Text style={styles.termNumber}>#{index + 1}</Text>
+                <TouchableOpacity
+                  onPress={() => handleAskQuestion(term)}
+                  style={styles.questionButton}
+                >
+                  <Text style={styles.questionIcon}>❓</Text>
+                </TouchableOpacity>
               </View>
 
-              <Text style={styles.termText}>{term.term_text}</Text>
+              <Text style={[styles.termText, isRTL && styles.rtlText]}>
+                {term.term_text}
+              </Text>
 
               {!term.is_valid_sharia && (
                 <View style={styles.issueSection}>
-                  <Text style={styles.issueTitle}>Issue:</Text>
-                  <Text style={styles.issueText}>{term.sharia_issue}</Text>
+                  <Text style={[styles.issueTitle, isRTL && styles.rtlText]}>
+                    {t('results.issue')}
+                  </Text>
+                  <Text style={[styles.issueText, isRTL && styles.rtlText]}>
+                    {term.sharia_issue}
+                  </Text>
                   
                   {term.reference_number && (
-                    <Text style={styles.referenceText}>
-                      Reference: {term.reference_number}
+                    <Text style={[styles.referenceText, isRTL && styles.rtlText]}>
+                      {t('results.reference')} {term.reference_number}
                     </Text>
                   )}
 
                   {term.modified_term && (
                     <View style={styles.suggestionSection}>
-                      <Text style={styles.suggestionTitle}>Suggested Alternative:</Text>
-                      <Text style={styles.suggestionText}>{term.modified_term}</Text>
+                      <Text style={[styles.suggestionTitle, isRTL && styles.rtlText]}>
+                        {t('results.suggestion')}
+                      </Text>
+                      <Text style={[styles.suggestionText, isRTL && styles.rtlText]}>
+                        {term.modified_term}
+                      </Text>
                     </View>
                   )}
                 </View>
@@ -217,19 +360,106 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ onBack, onNavigate }) => 
           ))}
         </View>
 
-        {/* Expert Review */}
-        <View style={styles.expertSection}>
-          <Text style={styles.sectionTitle}>Need Expert Review?</Text>
-          <Text style={styles.expertDescription}>
-            Get professional Islamic finance expert review for complex terms
-          </Text>
-          <TouchableOpacity style={styles.expertButton}>
-            <Text style={styles.expertButtonText}>Request Expert Review</Text>
-          </TouchableOpacity>
-        </View>
-
         <View style={styles.bottomSpace} />
       </ScrollView>
+
+      {/* Question Modal */}
+      <Modal
+        visible={questionModalVisible}
+        transparent={true}
+        animationType="slide"
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, isRTL && styles.rtlModal]}>
+            <Text style={[styles.modalTitle, isRTL && styles.rtlText]}>
+              {t('term.askQuestion')}
+            </Text>
+            
+            <TextInput
+              style={[styles.questionInput, isRTL && styles.rtlInput]}
+              placeholder={t('term.questionPlaceholder')}
+              value={questionText}
+              onChangeText={setQuestionText}
+              multiline
+              textAlign={isRTL ? 'right' : 'left'}
+            />
+            
+            <View style={[styles.modalButtons, isRTL && styles.rtlButtons]}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => setQuestionModalVisible(false)}
+              >
+                <Text style={[styles.cancelButtonText, isRTL && styles.rtlText]}>
+                  {t('common.cancel')}
+                </Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[styles.sendButton, (!questionText.trim() || isAskingQuestion) && styles.disabledButton]}
+                onPress={submitQuestion}
+                disabled={!questionText.trim() || isAskingQuestion}
+              >
+                {isAskingQuestion ? (
+                  <ActivityIndicator color="#ffffff" size="small" />
+                ) : (
+                  <Text style={[styles.sendButtonText, isRTL && styles.rtlText]}>
+                    {t('term.send')}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* General Question Modal */}
+      <Modal
+        visible={generalQuestionVisible}
+        transparent={true}
+        animationType="slide"
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, isRTL && styles.rtlModal]}>
+            <Text style={[styles.modalTitle, isRTL && styles.rtlText]}>
+              Ask about Contract
+            </Text>
+            
+            <TextInput
+              style={[styles.questionInput, isRTL && styles.rtlInput]}
+              placeholder="Ask about the entire contract..."
+              value={generalQuestion}
+              onChangeText={setGeneralQuestion}
+              multiline
+              textAlign={isRTL ? 'right' : 'left'}
+            />
+            
+            <View style={[styles.modalButtons, isRTL && styles.rtlButtons]}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => setGeneralQuestionVisible(false)}
+              >
+                <Text style={[styles.cancelButtonText, isRTL && styles.rtlText]}>
+                  {t('common.cancel')}
+                </Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[styles.sendButton, (!generalQuestion.trim() || isAskingQuestion) && styles.disabledButton]}
+                onPress={() => {
+                  setQuestionText(generalQuestion);
+                  setGeneralQuestionVisible(false);
+                  submitQuestion();
+                }}
+                disabled={!generalQuestion.trim() || isAskingQuestion}
+              >
+                <Text style={[styles.sendButtonText, isRTL && styles.rtlText]}>
+                  {t('term.send')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -238,6 +468,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8fafc',
+  },
+  rtlContainer: {
+    direction: 'rtl',
   },
   header: {
     flexDirection: 'row',
@@ -248,6 +481,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderBottomWidth: 1,
     borderBottomColor: '#e5e7eb',
+  },
+  rtlHeader: {
+    flexDirection: 'row-reverse',
   },
   backButton: {
     padding: 8,
@@ -261,11 +497,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#1f2937',
   },
-  shareButton: {
+  askButton: {
     padding: 8,
   },
-  shareIcon: {
+  askIcon: {
     fontSize: 20,
+  },
+  rtlText: {
+    textAlign: 'right',
   },
   loadingContainer: {
     flex: 1,
@@ -275,6 +514,11 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 16,
     color: '#6b7280',
+    marginTop: 12,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#ef4444',
   },
   summaryCard: {
     backgroundColor: '#ffffff',
@@ -341,29 +585,13 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
-    marginBottom: 12,
+  },
+  disabledButton: {
+    backgroundColor: '#9ca3af',
   },
   primaryButtonText: {
     color: '#ffffff',
     fontSize: 16,
-    fontWeight: '600',
-  },
-  secondaryButtons: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  secondaryButton: {
-    flex: 1,
-    backgroundColor: '#ffffff',
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-  },
-  secondaryButtonText: {
-    color: '#374151',
-    fontSize: 14,
     fontWeight: '600',
   },
   termsSection: {
@@ -388,6 +616,10 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2,
   },
+  rtlCard: {
+    borderLeftWidth: 0,
+    borderRightWidth: 4,
+  },
   compliantTerm: {
     borderLeftColor: '#10b981',
   },
@@ -403,6 +635,10 @@ const styles = StyleSheet.create({
   termStatus: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
+  },
+  rtlStatus: {
+    flexDirection: 'row-reverse',
   },
   statusIcon: {
     fontSize: 16,
@@ -412,10 +648,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
-  termNumber: {
-    fontSize: 12,
-    color: '#6b7280',
-    fontWeight: '500',
+  questionButton: {
+    padding: 4,
+  },
+  questionIcon: {
+    fontSize: 16,
   },
   termText: {
     fontSize: 16,
@@ -464,37 +701,75 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#0c4a6e',
   },
-  expertSection: {
+  bottomSpace: {
+    height: 100,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
     backgroundColor: '#ffffff',
     margin: 20,
     padding: 20,
     borderRadius: 12,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    width: '90%',
+    maxWidth: 400,
   },
-  expertDescription: {
-    fontSize: 14,
-    color: '#6b7280',
-    textAlign: 'center',
+  rtlModal: {
+    direction: 'rtl',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
     marginBottom: 16,
+    color: '#1f2937',
   },
-  expertButton: {
-    backgroundColor: '#8b5cf6',
-    paddingHorizontal: 24,
+  questionInput: {
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 8,
+    padding: 12,
+    minHeight: 100,
+    marginBottom: 16,
+    fontSize: 16,
+  },
+  rtlInput: {
+    textAlign: 'right',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  rtlButtons: {
+    flexDirection: 'row-reverse',
+  },
+  cancelButton: {
+    flex: 1,
+    backgroundColor: '#f3f4f6',
     paddingVertical: 12,
     borderRadius: 8,
+    alignItems: 'center',
   },
-  expertButtonText: {
-    color: '#ffffff',
-    fontSize: 14,
+  cancelButtonText: {
+    color: '#374151',
+    fontSize: 16,
     fontWeight: '600',
   },
-  bottomSpace: {
-    height: 100,
+  sendButton: {
+    flex: 1,
+    backgroundColor: '#10b981',
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  sendButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import {
   View,
@@ -17,9 +16,10 @@ import { api } from '../services/api';
 interface CameraScreenProps {
   onNavigate: (screen: string) => void;
   onBack: () => void;
+  onAnalysisComplete?: (result: any) => void;
 }
 
-const CameraScreen: React.FC<CameraScreenProps> = ({ onNavigate, onBack }) => {
+const CameraScreen: React.FC<CameraScreenProps> = ({ onNavigate, onBack, onAnalysisComplete }) => {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [type, setType] = useState(CameraType.back);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -37,7 +37,7 @@ const CameraScreen: React.FC<CameraScreenProps> = ({ onNavigate, onBack }) => {
       try {
         setIsAnalyzing(true);
         const photo = await cameraRef.current.takePictureAsync();
-        
+
         // Convert to file format for upload
         const file = {
           uri: photo.uri,
@@ -82,13 +82,17 @@ const CameraScreen: React.FC<CameraScreenProps> = ({ onNavigate, onBack }) => {
         } as any;
 
         const analysisResult = await api.uploadContract(file);
-        
-        Alert.alert('Success', 'Document analyzed successfully!', [
-          {
-            text: 'View Results',
-            onPress: () => onNavigate('results'),
-          },
-        ]);
+
+        if (onAnalysisComplete) {
+          onAnalysisComplete(analysisResult);
+        } else {
+          Alert.alert('Success', 'Document analyzed successfully!', [
+            {
+              text: 'View Results',
+              onPress: () => onNavigate('results'),
+            },
+          ]);
+        }
       } catch (error) {
         Alert.alert('Error', 'Failed to analyze document. Please try again.');
         console.error('Analysis error:', error);
@@ -114,13 +118,17 @@ const CameraScreen: React.FC<CameraScreenProps> = ({ onNavigate, onBack }) => {
         } as any;
 
         const analysisResult = await api.uploadContract(file);
-        
-        Alert.alert('Success', 'Document analyzed successfully!', [
-          {
-            text: 'View Results',
-            onPress: () => onNavigate('results'),
-          },
-        ]);
+
+        if (onAnalysisComplete) {
+          onAnalysisComplete(analysisResult);
+        } else {
+          Alert.alert('Success', 'Document analyzed successfully!', [
+            {
+              text: 'View Results',
+              onPress: () => onNavigate('results'),
+            },
+          ]);
+        }
       }
     } catch (error) {
       Alert.alert('Error', 'Failed to analyze document. Please try again.');
