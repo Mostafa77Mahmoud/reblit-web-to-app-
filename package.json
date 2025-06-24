@@ -14,7 +14,7 @@
     "expo:ios": "expo start --ios",
     "expo:android": "expo start --android",
     "expo:build:ios": "expo build:ios",
-    "expo:build:android"
+    "expo:build:android": "expo build:android"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
