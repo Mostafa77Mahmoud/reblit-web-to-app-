@@ -98,7 +98,9 @@
     "expo-av": "~14.0.7",
     "expo-camera": "~15.0.16",
     "react-native-vector-icons": "^10.0.3",
-    "react-native-svg": "15.2.0"
+    "react-native-svg": "15.2.0",
+    "lucide-react-native": "^0.454.0",
+    "react-native-svg": "15.8.0"
   },
   "devDependencies": {
     "@replit/vite-plugin-cartographer": "^0.2.5",

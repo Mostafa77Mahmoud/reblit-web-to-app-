@@ -1,0 +1,197 @@
+
+{
+  "app": {
+    "title": "Shar'AI",
+    "subtitle": "AI-Powered Sharia-Compliant Contract Analysis",
+    "logout": "Logout"
+  },
+  "onboarding": {
+    "welcome": "Welcome to Shar'AI",
+    "step1": {
+      "title": "Upload Contracts",
+      "description": "Upload your legal documents in Arabic or English for AI-powered analysis"
+    },
+    "step2": {
+      "title": "AI Analysis",
+      "description": "Our advanced AI analyzes every term for Sharia compliance with expert precision"
+    },
+    "step3": {
+      "title": "Get Results",
+      "description": "Receive detailed compliance reports with suggestions for improvements"
+    },
+    "step4": {
+      "title": "Expert Consultation",
+      "description": "Connect with certified Islamic law experts for complex cases"
+    },
+    "getStarted": "Get Started",
+    "skip": "Skip Tutorial"
+  },
+  "navigation": {
+    "home": "Home",
+    "camera": "Camera",
+    "history": "History",
+    "profile": "Profile",
+    "menu": "Menu"
+  },
+  "home": {
+    "welcome": "Welcome to Shar'AI",
+    "subtitle": "AI-Powered Islamic Contract Analysis",
+    "uploadContract": "Upload Contract",
+    "takePhoto": "Take Photo",
+    "recentAnalyses": "Recent Analyses",
+    "quickStats": "Quick Stats",
+    "contractsAnalyzed": "Contracts Analyzed",
+    "complianceRate": "Avg. Compliance",
+    "expertConsultations": "Expert Consultations"
+  },
+  "upload": {
+    "title": "Upload Contract",
+    "dragDrop": "Drag and drop your contract here, or click to browse",
+    "supportedFormats": "Supported formats: PDF, DOC, DOCX, TXT",
+    "maxFileSize": "Maximum file size: 10MB",
+    "uploading": "Uploading...",
+    "analyzing": "Analyzing contract...",
+    "processing": "Processing document...",
+    "complete": "Analysis complete!"
+  },
+  "analyze": {
+    "step": {
+      "initial": "Initializing analysis...",
+      "extractText": "Extracting text from document...",
+      "identifyTerms": "Identifying contract terms...",
+      "shariaComplianceCheck": "Checking Sharia compliance...",
+      "generateSuggestions": "Generating suggestions...",
+      "compileResults": "Compiling results..."
+    },
+    "complete": "Analysis Complete",
+    "viewResults": "Analysis complete! View your results."
+  },
+  "results": {
+    "title": "Analysis Results",
+    "overview": "Contract Overview",
+    "compliance": "Compliance Summary",
+    "terms": "Contract Terms",
+    "suggestions": "Suggestions",
+    "export": "Export Report",
+    "askQuestion": "Ask Question",
+    "newAnalysis": "New Analysis"
+  },
+  "compliance": {
+    "full": "Fully Compliant",
+    "partial": "Partially Compliant", 
+    "non": "Non-Compliant",
+    "terms": "Your contract has been analyzed for Sharia compliance",
+    "compliantTerms": "Compliant Terms",
+    "nonCompliantTerms": "Non-Compliant Terms",
+    "compliant": "Compliant",
+    "nonCompliant": "Non-Compliant",
+    "pending": "Pending Review"
+  },
+  "camera": {
+    "title": "Scan Contract",
+    "instruction": "Position the contract within the frame",
+    "capture": "Capture",
+    "retake": "Retake",
+    "analyze": "Analyze Document",
+    "processing": "Processing image..."
+  },
+  "history": {
+    "title": "Analysis History",
+    "recent": "Recent Analyses",
+    "search": "Search contracts...",
+    "filter": "Filter",
+    "noHistory": "No analyses yet",
+    "startAnalyzing": "Start analyzing contracts to see your history",
+    "delete": "Delete",
+    "view": "View Details"
+  },
+  "profile": {
+    "title": "Profile",
+    "account": "Account Information",
+    "settings": "Settings",
+    "language": "Language",
+    "theme": "Theme",
+    "notifications": "Notifications",
+    "privacy": "Privacy",
+    "about": "About",
+    "version": "Version",
+    "logout": "Logout",
+    "achievements": "Achievements",
+    "contractsAnalyzed": "Contracts Analyzed",
+    "expertConsultations": "Expert Consultations",
+    "complianceRate": "Average Compliance Rate"
+  },
+  "auth": {
+    "login": "Login",
+    "signup": "Sign Up",
+    "logout": "Logout",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "forgotPassword": "Forgot Password?",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "loggedInAs": "Logged in as"
+  },
+  "guest": {
+    "mode": "Guest Mode",
+    "featuresAvailable": "Limited features available"
+  },
+  "sidebar": {
+    "title": "Menu",
+    "welcome": "Welcome to Shar'AI",
+    "description_new": "Your trusted AI companion for Sharia-compliant contract analysis. Upload, analyze, and ensure your legal documents meet Islamic law standards with cutting-edge artificial intelligence.",
+    "howTo_new": "How It Works",
+    "step1_new": "Upload your contract document (PDF, DOC, DOCX, or TXT)",
+    "step2_new": "AI analyzes each term for Sharia compliance automatically",
+    "step3_new": "Review suggested modifications for non-compliant terms",
+    "step4_new": "Confirm or modify AI suggestions based on your needs",
+    "step5_new": "Ask questions about specific terms or the entire contract",
+    "step6_new": "Download your compliant contract or analysis report",
+    "features_new": "Key Features",
+    "instantAnalysis_new": "Instant AI-powered analysis of contract terms",
+    "designedForIslamicLaw": "Specifically designed for Islamic law compliance",
+    "multilingual_new": "Support for Arabic and English with RTL text",
+    "darkMode_new": "Beautiful dark and light modes for comfortable use",
+    "exportDocuments": "Export analysis reports and modified contracts",
+    "dataPrivacy_new": "Complete data privacy with secure document handling"
+  },
+  "features": {
+    "instantAnalysis_new": "Instant Analysis",
+    "designedForIslamicLaw": "Islamic Law Focused",
+    "multilingual_new": "Multilingual Support",
+    "darkMode_new": "Dark Mode",
+    "exportDocuments": "Export Documents",
+    "dataPrivacy_new": "Data Privacy"
+  },
+  "question": {
+    "askAboutTerm": "Ask about this term",
+    "askAboutContract": "Ask about the contract",
+    "placeholder": "Type your question here...",
+    "send": "Send",
+    "thinking": "AI is thinking...",
+    "response": "AI Response"
+  },
+  "errors": {
+    "uploadFailed": "Upload failed. Please try again.",
+    "analysisFailed": "Analysis failed. Please try again.",
+    "networkError": "Network error. Please check your connection.",
+    "fileTooBig": "File is too large. Maximum size is 10MB.",
+    "unsupportedFormat": "Unsupported file format.",
+    "generic": "Something went wrong. Please try again."
+  },
+  "common": {
+    "loading": "Loading...",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "finish": "Finish"
+  }
+}

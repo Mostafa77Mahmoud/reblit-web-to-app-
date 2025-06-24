@@ -1,6 +1,7 @@
-
 import React from 'react';
-import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Text } from 'react-native';
+import { Home, Camera, History, User, Menu } from 'lucide-react-native';
+import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface MobileNavigationProps {
@@ -8,156 +9,89 @@ interface MobileNavigationProps {
   onNavigate: (screen: string) => void;
 }
 
-interface NavItem {
-  id: string;
-  label: string;
-  icon: string;
-}
-
 const MobileNavigation: React.FC<MobileNavigationProps> = ({ currentScreen, onNavigate }) => {
-  const { t, isRTL } = useLanguage();
+  const { theme } = useTheme();
+  const { t } = useLanguage();
 
-  const navItems: NavItem[] = [
-    {
-      id: 'home',
-      label: t('navigation.home') || 'Home',
-      icon: '🏠',
-    },
-    {
-      id: 'camera',
-      label: t('navigation.camera') || 'Scan',
-      icon: '📷',
-    },
-    {
-      id: 'history',
-      label: t('navigation.history') || 'History',
-      icon: '📋',
-    },
-    {
-      id: 'profile',
-      label: t('navigation.profile') || 'Profile',
-      icon: '👤',
-    }
+  const tabs = [
+    { id: 'home', icon: Home, label: t('navigation.home') },
+    { id: 'camera', icon: Camera, label: t('navigation.camera') },
+    { id: 'history', icon: History, label: t('navigation.history') },
+    { id: 'profile', icon: User, label: t('navigation.profile') },
+    { id: 'sidebar', icon: Menu, label: t('navigation.menu') },
   ];
 
-  return (
-    <View style={[styles.container, isRTL && styles.rtlContainer]}>
-      <View style={[styles.navigationBar, isRTL && styles.rtlNavigationBar]}>
-        {navItems.map((item) => {
-          const isActive = currentScreen === item.id;
-          const isCenterItem = item.id === 'camera';
+  const styles = StyleSheet.create({
+    container: {
+      flexDirection: 'row',
+      backgroundColor: theme === 'dark' ? '#0a0a0a' : '#ffffff',
+      borderTopWidth: 1,
+      borderTopColor: theme === 'dark' ? '#27272a' : '#e4e4e7',
+      paddingVertical: 4,
+      paddingHorizontal: 8,
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 0,
+        height: -2,
+      },
+      shadowOpacity: theme === 'dark' ? 0.3 : 0.1,
+      shadowRadius: 4,
+      elevation: 8,
+    },
+    tab: {
+      flex: 1,
+      alignItems: 'center',
+      paddingVertical: 8,
+      paddingHorizontal: 4,
+      borderRadius: 12,
+    },
+    activeTab: {
+      backgroundColor: theme === 'dark' ? '#1f2937' : '#f0fdf4',
+    },
+    tabLabel: {
+      fontSize: 11,
+      marginTop: 2,
+      fontWeight: '500',
+    },
+    activeTabLabel: {
+      color: '#10b981',
+    },
+    inactiveTabLabel: {
+      color: theme === 'dark' ? '#9ca3af' : '#6b7280',
+    },
+  });
 
-          return (
-            <TouchableOpacity
-              key={item.id}
-              onPress={() => onNavigate(item.id)}
+  return (
+    <View style={styles.container}>
+      {tabs.map((tab) => {
+        const Icon = tab.icon;
+        const isActive = currentScreen === tab.id;
+
+        return (
+          <TouchableOpacity
+            key={tab.id}
+            style={[styles.tab, isActive && styles.activeTab]}
+            onPress={() => onNavigate(tab.id)}
+          >
+            <Icon 
+              size={22} 
+              color={isActive ? '#10b981' : theme === 'dark' ? '#9ca3af' : '#6b7280'} 
+              strokeWidth={2}
+            />
+            <Text 
               style={[
-                styles.navButton,
-                isCenterItem && styles.centerButton,
-                isActive && styles.activeButton,
-                isRTL && styles.rtlNavButton
+                styles.tabLabel,
+                isActive ? styles.activeTabLabel : styles.inactiveTabLabel
               ]}
+              numberOfLines={1}
             >
-              <Text style={[
-                styles.icon,
-                isCenterItem && styles.centerIcon,
-                isActive && styles.activeIcon
-              ]}>
-                {item.icon}
-              </Text>
-              <Text style={[
-                styles.label,
-                isCenterItem && styles.centerLabel,
-                isActive && styles.activeLabel,
-                isRTL && styles.rtlLabel
-              ]}>
-                {item.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+              {tab.label}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    zIndex: 50,
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(0, 0, 0, 0.1)',
-  },
-  rtlContainer: {
-    flexDirection: 'row-reverse',
-  },
-  navigationBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    paddingBottom: 20, // Safe area for iOS
-  },
-  rtlNavigationBar: {
-    flexDirection: 'row-reverse',
-  },
-  navButton: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    borderRadius: 16,
-    marginHorizontal: 4,
-  },
-  rtlNavButton: {
-    marginHorizontal: 4,
-  },
-  centerButton: {
-    backgroundColor: '#10b981',
-    marginTop: -8,
-    paddingVertical: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  activeButton: {
-    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-  },
-  icon: {
-    fontSize: 20,
-    marginBottom: 4,
-  },
-  centerIcon: {
-    fontSize: 24,
-    color: '#ffffff',
-  },
-  activeIcon: {
-    transform: [{ scale: 1.1 }],
-  },
-  label: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: '#6b7280',
-  },
-  rtlLabel: {
-    textAlign: 'right',
-  },
-  centerLabel: {
-    color: '#ffffff',
-    fontWeight: '600',
-  },
-  activeLabel: {
-    color: '#10b981',
-    fontWeight: '600',
-  },
-});
 
 export default MobileNavigation;

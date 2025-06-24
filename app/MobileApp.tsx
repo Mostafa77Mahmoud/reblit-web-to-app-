@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Animated, Dimensions, StatusBar } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
@@ -15,7 +14,7 @@ import { useTheme } from './contexts/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
-type ScreenType = 'onboarding' | 'home' | 'camera' | 'history' | 'profile' | 'search' | 'notifications' | 'upload' | 'results';
+type ScreenType = 'onboarding' | 'home' | 'camera' | 'history' | 'profile' | 'search' | 'notifications' | 'upload' | 'results' | 'sidebar';
 
 interface NavigationData {
   sessionId?: string;
@@ -26,7 +25,7 @@ const MobileApp = () => {
   const { isAuthenticated } = useAuth();
   const { isRTL } = useLanguage();
   const { theme } = useTheme();
-  const [currentScreen, setCurrentScreen] = useState<ScreenType>('onboarding');
+  const [currentScreen, setCurrentScreen] = useState<ScreenType>('home');
   const [navigationData, setNavigationData] = useState<NavigationData>({});
   const [hasSeenOnboarding, setHasSeenOnboarding] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -56,7 +55,7 @@ const MobileApp = () => {
 
   const handleNavigate = (screen: ScreenType, data?: NavigationData) => {
     setNavigationData(data || {});
-    
+
     Animated.timing(slideAnim, {
       toValue: isRTL ? -width : width,
       duration: 300,
@@ -120,6 +119,8 @@ const MobileApp = () => {
         return <ProfileScreen {...screenProps} />;
       case 'results':
         return <ResultsScreen {...screenProps} />;
+      case 'sidebar':
+        return <SidebarScreen navigation={{ goBack: () => setCurrentScreen('home') }} />;
       default:
         return <HomeScreen {...screenProps} />;
     }
@@ -158,7 +159,7 @@ const MobileApp = () => {
         ]}>
           {renderScreen()}
         </Animated.View>
-        
+
         {showNavigation && (
           <MobileNavigation 
             currentScreen={currentScreen} 
@@ -166,7 +167,7 @@ const MobileApp = () => {
             theme={theme}
           />
         )}
-        
+
         <View style={[
           styles.statusBar, 
           { backgroundColor: isDarkMode ? '#10b981' : '#10b981' }
