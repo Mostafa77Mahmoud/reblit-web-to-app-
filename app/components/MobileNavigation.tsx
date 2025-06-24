@@ -1,86 +1,160 @@
 
 import React from 'react';
 import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface MobileNavigationProps {
   currentScreen: string;
   onNavigate: (screen: string) => void;
 }
 
+interface NavItem {
+  id: string;
+  label: string;
+  icon: string;
+}
+
 const MobileNavigation: React.FC<MobileNavigationProps> = ({ currentScreen, onNavigate }) => {
-  const navItems = [
-    { id: 'home', label: 'Home', icon: '🏠' },
-    { id: 'search', label: 'Search', icon: '🔍' },
-    { id: 'camera', label: 'Scan', icon: '📸' },
-    { id: 'history', label: 'History', icon: '📋' },
-    { id: 'profile', label: 'Profile', icon: '👤' },
+  const { t, isRTL } = useLanguage();
+
+  const navItems: NavItem[] = [
+    {
+      id: 'home',
+      label: t('navigation.home') || 'Home',
+      icon: '🏠',
+    },
+    {
+      id: 'camera',
+      label: t('navigation.camera') || 'Scan',
+      icon: '📷',
+    },
+    {
+      id: 'history',
+      label: t('navigation.history') || 'History',
+      icon: '📋',
+    },
+    {
+      id: 'profile',
+      label: t('navigation.profile') || 'Profile',
+      icon: '👤',
+    }
   ];
 
   return (
-    <View style={styles.container}>
-      {navItems.map((item) => (
-        <TouchableOpacity
-          key={item.id}
-          style={[
-            styles.navItem,
-            currentScreen === item.id && styles.activeNavItem
-          ]}
-          onPress={() => onNavigate(item.id)}
-        >
-          <Text style={[
-            styles.navIcon,
-            currentScreen === item.id && styles.activeNavIcon
-          ]}>
-            {item.icon}
-          </Text>
-          <Text style={[
-            styles.navLabel,
-            currentScreen === item.id && styles.activeNavLabel
-          ]}>
-            {item.label}
-          </Text>
-        </TouchableOpacity>
-      ))}
+    <View style={[styles.container, isRTL && styles.rtlContainer]}>
+      <View style={[styles.navigationBar, isRTL && styles.rtlNavigationBar]}>
+        {navItems.map((item) => {
+          const isActive = currentScreen === item.id;
+          const isCenterItem = item.id === 'camera';
+
+          return (
+            <TouchableOpacity
+              key={item.id}
+              onPress={() => onNavigate(item.id)}
+              style={[
+                styles.navButton,
+                isCenterItem && styles.centerButton,
+                isActive && styles.activeButton,
+                isRTL && styles.rtlNavButton
+              ]}
+            >
+              <Text style={[
+                styles.icon,
+                isCenterItem && styles.centerIcon,
+                isActive && styles.activeIcon
+              ]}>
+                {item.icon}
+              </Text>
+              <Text style={[
+                styles.label,
+                isCenterItem && styles.centerLabel,
+                isActive && styles.activeLabel,
+                isRTL && styles.rtlLabel
+              ]}>
+                {item.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    backgroundColor: '#ffffff',
-    paddingVertical: 12,
-    paddingHorizontal: 8,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 50,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 8,
+    borderTopColor: 'rgba(0, 0, 0, 0.1)',
   },
-  navItem: {
+  rtlContainer: {
+    flexDirection: 'row-reverse',
+  },
+  navigationBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    paddingBottom: 20, // Safe area for iOS
+  },
+  rtlNavigationBar: {
+    flexDirection: 'row-reverse',
+  },
+  navButton: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: 8,
-    borderRadius: 12,
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderRadius: 16,
+    marginHorizontal: 4,
   },
-  activeNavItem: {
-    backgroundColor: '#f0f9ff',
+  rtlNavButton: {
+    marginHorizontal: 4,
   },
-  navIcon: {
+  centerButton: {
+    backgroundColor: '#10b981',
+    marginTop: -8,
+    paddingVertical: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  activeButton: {
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+  },
+  icon: {
     fontSize: 20,
     marginBottom: 4,
   },
-  activeNavIcon: {
+  centerIcon: {
+    fontSize: 24,
+    color: '#ffffff',
+  },
+  activeIcon: {
     transform: [{ scale: 1.1 }],
   },
-  navLabel: {
+  label: {
     fontSize: 12,
-    color: '#6b7280',
     fontWeight: '500',
+    color: '#6b7280',
   },
-  activeNavLabel: {
+  rtlLabel: {
+    textAlign: 'right',
+  },
+  centerLabel: {
+    color: '#ffffff',
+    fontWeight: '600',
+  },
+  activeLabel: {
     color: '#10b981',
     fontWeight: '600',
   },
