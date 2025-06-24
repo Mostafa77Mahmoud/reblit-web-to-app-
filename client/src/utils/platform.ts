@@ -1,10 +1,9 @@
 
-import { Platform } from 'react-native';
-
-export const isWeb = Platform.OS === 'web';
-export const isNative = Platform.OS !== 'web';
-export const isIOS = Platform.OS === 'ios';
-export const isAndroid = Platform.OS === 'android';
+// Platform detection that works in both web and Expo environments
+export const isWeb = typeof window !== 'undefined' && !window.navigator?.product?.includes('ReactNative');
+export const isNative = typeof window !== 'undefined' && window.navigator?.product?.includes('ReactNative');
+export const isIOS = isNative && /iPad|iPhone|iPod/.test(navigator.userAgent);
+export const isAndroid = isNative && /Android/.test(navigator.userAgent);
 
 // Expo-compatible storage
 export const getStorageItem = async (key: string) => {

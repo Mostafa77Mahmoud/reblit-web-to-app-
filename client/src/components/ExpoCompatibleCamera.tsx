@@ -18,22 +18,26 @@ export const ExpoCompatibleCamera: React.FC<ExpoCompatibleCameraProps> = ({ onCa
 
   const handleNativeCapture = async () => {
     try {
-      // This will work with Expo Camera
-      const { Camera } = await import('expo-camera');
-      const { launchCameraAsync, MediaTypeOptions } = await import('expo-image-picker');
-      
-      const result = await launchCameraAsync({
-        mediaTypes: MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 1,
-      });
+      // Dynamic import for Expo Camera (only works in Expo environment)
+      if (typeof window !== 'undefined' && window.navigator?.product?.includes('ReactNative')) {
+        const { launchCameraAsync, MediaTypeOptions } = await import('expo-image-picker');
+        
+        const result = await launchCameraAsync({
+          mediaTypes: MediaTypeOptions.Images,
+          allowsEditing: true,
+          aspect: [4, 3],
+          quality: 1,
+        });
 
-      if (!result.canceled) {
-        onCapture(result.assets[0].uri);
+        if (!result.canceled) {
+          onCapture(result.assets[0].uri);
+        }
+      } else {
+        // Fallback to web camera
+        handleWebCapture();
       }
     } catch (error) {
-      console.log('Camera not available, falling back to file input');
+      console.log('Expo camera not available, falling back to file input');
       handleWebCapture();
     }
   };
