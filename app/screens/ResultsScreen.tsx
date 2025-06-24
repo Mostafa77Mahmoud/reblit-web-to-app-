@@ -1,18 +1,24 @@
-import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  SafeAreaView,
-} from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
 import { useLanguage } from '../contexts/LanguageContext';
-import ContractTermsList from '../components/ContractTermsList';
-import ComplianceBanner from '../components/ComplianceBanner';
+import { useTheme } from '../contexts/ThemeContext';
+import { useSession } from '../contexts/SessionContext';
+import { Button } from '../components/ui/button';
+import { Card, CardContent, CardHeader } from '../components/ui/card';
+import { ComplianceBanner } from '../components/ComplianceBanner';
+import { ContractTermsList } from '../components/ContractTermsList';
+import { AnalyzingAnimation } from '../components/AnalyzingAnimation';
+import { QuestionAnimation } from '../components/QuestionAnimation';
 
 const ResultsScreen: React.FC<ResultsScreenProps> = ({ onNavigate, data }) => {
   const { t, isRTL } = useLanguage();
+  const { theme } = useTheme();
+  const { sessionData } = useSession();
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [showQuestion, setShowQuestion] = useState(false);
+  const [currentQuestion, setCurrentQuestion] = useState('');
+
+  const isDark = theme === 'dark';
 
   const mockResults = data?.results || {
     terms: [
@@ -52,6 +58,20 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ onNavigate, data }) => {
   const handleTermAction = (termId: string, action: string, actionData?: any) => {
     console.log('Term action:', { termId, action, actionData });
     // Handle term actions like edit, confirm, question, etc.
+  };
+
+  const handleAskQuestion = (question: string) => {
+    setCurrentQuestion(question);
+    setShowQuestion(true);
+    // Simulate API call
+    setTimeout(() => {
+      setShowQuestion(false);
+    }, 3000);
+  };
+
+  const handleTermInteraction = (termId: string, action: string) => {
+    console.log('Term interaction:', termId, action);
+    // Handle term interactions (confirm, modify, etc.)
   };
 
   return (
@@ -106,6 +126,9 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ onNavigate, data }) => {
           </TouchableOpacity>
         </View>
       </ScrollView>
+      {/* Animations */}
+      <AnalyzingAnimation isAnalyzing={isAnalyzing} />
+      <QuestionAnimation isVisible={showQuestion} question={currentQuestion} />
     </SafeAreaView>
   );
 };
@@ -253,7 +276,10 @@ const styles = StyleSheet.create({
   },
   spaceAround: {
     justifyContent: 'spaceAround',
-  }
+  },
+  button: {
+    marginTop: 10,
+  },
 });
 
 export default ResultsScreen;

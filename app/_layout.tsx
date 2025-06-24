@@ -6,16 +6,22 @@ import MobileApp from './MobileApp';
 import { AuthProvider } from './contexts/AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { SessionProvider } from './contexts/SessionContext';
+import { ContractProvider } from './contexts/ContractContext';
 
 export default function RootLayout() {
   return (
     <ThemeProvider>
       <LanguageProvider>
         <AuthProvider>
-          <View style={styles.container}>
-            <StatusBar style="auto" />
-            <MobileApp />
-          </View>
+          <SessionProvider>
+            <ContractProvider>
+              <View style={styles.container}>
+                <StatusBar style="auto" />
+                <MobileApp />
+              </View>
+            </ContractProvider>
+          </SessionProvider>
         </AuthProvider>
       </LanguageProvider>
     </ThemeProvider>
